@@ -771,3 +771,14 @@ footer {
     scroll-behavior: auto !important;
   }
 }
+
+/* The semantic input owns the full tile hit target, including its text. */
+.scale-options label input,
+.experience input {
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  cursor: pointer;
+}

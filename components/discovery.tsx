@@ -9,7 +9,7 @@ import {
   USEFULNESS_HELP,
   USEFULNESS_QUESTION,
 } from '@/lib/study';
-type PublicSession = { id: string; state: Study; created_at: string };
+type PublicSession = { id: string; state: Study; created_at: string; feedbackStatus?: string };
 type Me = { participantId: string; recoveryEnabled: boolean; session: PublicSession | null };
 class ApiError extends Error {
   constructor(
@@ -168,6 +168,10 @@ export function Discovery() {
   const state = s?.state;
   const current = state ? currentSuggestion(state) : undefined;
   const completed = state?.rounds.filter((r) => r.completedAt).length ?? 0;
+  useEffect(() => {
+    setEmailSent(!!s?.feedbackStatus);
+    setEmailCancelled(s?.feedbackStatus === 'cancelled');
+  }, [s?.id, s?.feedbackStatus]);
   const phase =
     screen !== 'study'
       ? screen

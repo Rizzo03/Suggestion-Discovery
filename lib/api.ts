@@ -71,10 +71,22 @@ async function getState(id: string) {
     .eq('id', id)
     .single();
   check(e);
+  const latest = sessions?.[0];
+  let feedbackStatus: string | undefined;
+  if (latest?.state.status === 'stopped') {
+    const { data: contact, error: contactError } = await db()
+      .from('email_requests')
+      .select('status')
+      .eq('session_id', latest.id)
+      .eq('participant_id', id)
+      .maybeSingle();
+    check(contactError);
+    feedbackStatus = contact?.status;
+  }
   return {
     participantId: id,
     recoveryEnabled: !!p?.recovery_hash,
-    session: sessions?.[0] ? publicSession(sessions[0]) : null,
+    session: latest ? { ...publicSession(latest), feedbackStatus } : null,
   };
 }
 export async function handle(req: Request, path: string[]) {
