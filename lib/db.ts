@@ -17,7 +17,7 @@ export function check(error: { message: string } | null) {
 }
 export async function participant() {
   const raw = (await cookies()).get('sd_identity')?.value;
-  if (!raw) throw new StudyError('Create or recover your anonymous ID first.', 401);
+  if (!raw) throw new StudyError('Create or recover your participant ID first.', 401);
   const { data, error } = await db()
     .from('identity_tokens')
     .select('participant_id')

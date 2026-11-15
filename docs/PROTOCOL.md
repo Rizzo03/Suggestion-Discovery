@@ -6,7 +6,7 @@ A random UUID identifies a participant. A separate 256-bit device token is store
 
 Optional recovery uses a different 256-bit code shown once, hashed in `participants.recovery_hash`. It is independent of the pilot invitation. Recovery creates a new device token; multiple devices may refer to the same participant. Creating a replacement recovery code invalidates the previous code. Signing out deletes the current device token. Lost IDs cannot be recovered without a recovery code. Do not store recovery codes in research exports.
 
-Research consent is explicitly checked, versioned and timestamped at the start of every session, with adult/private-invitation confirmation. Email consent is an independent event after the session ends. The technical pilot is not prepared for minors or public recruitment.
+The consent screen prominently explains that coded session data are used for research, no name or email is required, repeated visits are linked by the participant ID, and email is a separate optional choice after the session. It does not promise complete non-identifiability. Research consent is explicitly checked, versioned and timestamped at the start of every session, with adult/private-invitation confirmation. Email consent is an independent event after the session ends. The technical pilot is not prepared for minors or public recruitment.
 
 ## Round sequence
 
@@ -37,8 +37,10 @@ The study document contains selected experiences; baseline and repeated measurem
 
 `commit_session` compares participant ownership and expected version, updates state and appends its audit event in one PostgreSQL transaction. A stale writer receives a conflict. Active sessions are unique per participant. A round-generation lease prevents duplicate generation; a crashed lease can be retried after five minutes. A late generation cannot overwrite a stop or other version change. Audio assets use unique paths and are deleted on failed state commit. An upload completed just before process termination may be orphaned; an investigator must reconcile Storage prefixes with retained `audioPath` records under the approved retention plan.
 
-Prompt version: `suggestions-1`. Consent version: `pilot-consent-1`. Email consent: `email-feedback-1`. Changes to content, voice, allocation or measures should increment the relevant protocol version and be reviewed. Keep model and voice environment variables fixed during a pilot cohort; metadata records the requested model and voice for every generated audio file. The Speech API does not guarantee a model build identifier or byte-identical regeneration. Retain the generated audio and SHA-256 hash for audit.
+Prompt version: `suggestions-1`. Consent version: `pilot-consent-2`. Email consent: `email-feedback-2`. Changes to content, voice, allocation or measures should increment the relevant protocol version and be reviewed. Keep model and voice environment variables fixed during a pilot cohort; metadata records the requested model and voice for every generated audio file. The Speech API does not guarantee a model build identifier or byte-identical regeneration. Retain the generated audio and SHA-256 hash for audit.
 
 ## Session completion and interpretation
 
 An intentionally ended session has `session_complete=true` in the sessions export. This means the participant ended the session, not that a prescribed dose was completed. Use `rounds_complete`, `partial_round`, individual response statuses and completion timestamps in analysis. Inactive-but-unended sessions remain `active`; do not infer exposure or completion from page visits. Neither usefulness ratings nor intensity changes establish therapeutic efficacy.
+
+Consent revision 2 makes research use and optional email explicit on the main consent screen and uses “participant ID” / “coded data” rather than promising complete anonymity. Existing session and email consent versions are retained; new sessions and new email opt-ins record the revised versions. No database migration is needed.

@@ -280,7 +280,7 @@ export async function handle(req: Request, path: string[]) {
           participant_id: p,
           session_id: s.id,
           encrypted_email: encrypt(b.email),
-          consent_version: 'email-feedback-1',
+          consent_version: 'email-feedback-2',
         });
       if (error?.code === '23505')
         throw new StudyError('A feedback request already exists for this session.');

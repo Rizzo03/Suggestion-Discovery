@@ -226,7 +226,7 @@ export function Discovery() {
             onClick={() => setShowRecovery(!showRecovery)}
             aria-expanded={showRecovery}
           >
-            Your anonymous ID
+            Your participant ID
           </button>
         )}
       </header>
@@ -257,7 +257,7 @@ export function Discovery() {
         <section className="workspace" aria-label="Participant study">
           {showRecovery && me && (
             <section className="card identity-card">
-              <h2>Your anonymous ID</h2>
+              <h2>Your participant ID</h2>
               <p className="id-value">{me.participantId}</p>
               <p>
                 This device remembers you for up to 30 days. Your ID is not a recovery password. A
@@ -372,8 +372,8 @@ export function Discovery() {
               <div className="eyebrow">YOUR LISTENING SPACE</div>
               <h2>{recover ? 'Welcome back.' : 'Start with a fresh perspective.'}</h2>
               <p>
-                We use a randomly generated anonymous ID rather than your name. Your responses are
-                saved to that ID.
+                You can participate without giving your name or email address. We create a random
+                participant ID to save your responses and recognise returning visits.
               </p>
               {recover ? (
                 <form
@@ -410,7 +410,7 @@ export function Discovery() {
                     })
                   }
                 >
-                  {busy ? 'Creating…' : 'Create anonymous ID'}
+                  {busy ? 'Creating…' : 'Create participant ID'}
                   <span aria-hidden="true">↗</span>
                 </button>
               )}
@@ -442,6 +442,25 @@ export function Discovery() {
                     to five AI-generated suggestions in each round. After each, tell us how useful
                     it was. You can continue for as many rounds as you wish.
                   </p>
+                  <div className="info" aria-label="How your data is used">
+                    <strong>Your responses will be used for research.</strong>
+                    <p>
+                      We study how people respond to different spoken suggestions. We record your
+                      selected experiences, intensity and usefulness ratings, suggestions, listening
+                      events and session details under a random participant ID. Your name and email
+                      address are not required to take part.
+                    </p>
+                    <p>
+                      These are coded research data: the ID links your sessions, so we do not
+                      promise that every record is completely non-identifiable. Research exports
+                      exclude email addresses and sign-in or recovery credentials.
+                    </p>
+                    <p>
+                      After a session, you can optionally provide an email address to receive one
+                      personal feedback summary. This is a separate choice and is not required for
+                      research participation.
+                    </p>
+                  </div>
                   <div className="info">
                     <strong>A private technical pilot, not healthcare.</strong>
                     <p>
@@ -463,7 +482,7 @@ export function Discovery() {
                       service. It must remain a private pilot pending ethics and privacy review.
                     </p>
                     <p>
-                      We record your anonymous ID, sessions, selected experiences, intensity
+                      We record your participant ID, sessions, selected experiences, intensity
                       ratings, exact suggestions, AI metadata, randomisation, eye conditions, audio
                       playback events, usefulness responses, and timestamps. The proposed usefulness
                       question is exploratory and has not been described as a validated measure.
@@ -485,7 +504,7 @@ export function Discovery() {
                       Contact the study team through your invitation before consenting if you need
                       details of the investigator, hosting region, retention, withdrawal, or data
                       access. These arrangements must be agreed for this private pilot; this app
-                      does not assert regulatory approval. Keep your anonymous ID for privacy or
+                      does not assert regulatory approval. Keep your participant ID for privacy or
                       withdrawal requests.
                     </p>
                   </details>
@@ -503,8 +522,9 @@ export function Discovery() {
                       checked={consent}
                       onChange={(e) => setConsent(e.target.checked)}
                     />
-                    I have read the information and voluntarily consent to this session’s research
-                    data collection.
+                    I have read the information and voluntarily agree to the collection and use of
+                    my coded session data for research. I understand that providing an email address
+                    is optional and requires separate consent.
                   </label>
                   <button
                     disabled={!consent || !adult || busy}
@@ -678,15 +698,16 @@ export function Discovery() {
                 There is no expected improvement.
               </p>
               <p>
-                Your session is saved under your anonymous ID. You can return for another session
+                Your session is saved under your participant ID. You can return for another session
                 whenever you wish.
               </p>
               <div className="info">
                 <h3>Optional: a reflection by email</h3>
                 <p>
                   Receive a personal summary of the experiences you explored and your participation
-                  after this session. It contains no treatment advice. Email consent is separate
-                  from research consent.
+                  after this session. You can leave this blank and finish without receiving email.
+                  Your research participation is already saved. The summary contains no treatment
+                  advice, and email consent is separate from research consent.
                 </p>
                 {emailSent ? (
                   <div role="status">
@@ -790,8 +811,9 @@ function FeedbackForm({ busy, onSubmit }: { busy: boolean; onSubmit: (email: str
           checked={consent}
           onChange={(e) => setConsent(e.target.checked)}
         />
-        I separately consent to linking this email to this session and receiving one session
-        summary. No marketing.
+        I choose to provide this email address and separately consent to linking it to this session
+        only to receive one feedback summary. It is stored separately from research responses,
+        excluded from research exports and not used for marketing.
       </label>
       <button className="secondary" disabled={busy || !consent}>
         Request email summary

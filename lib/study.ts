@@ -13,7 +13,7 @@ export const EXPERIENCES = [
   'Other',
 ] as const;
 export const TYPES = ['metaphor', 'permissive', 'direct', 'imagery', 'attentional_shift'] as const;
-export const CONSENT_VERSION = 'pilot-consent-1';
+export const CONSENT_VERSION = 'pilot-consent-2';
 export const PROMPT_VERSION = 'suggestions-1';
 export const VOICE_INSTRUCTIONS =
   'Speak in a calm, neutral, warm tone at a steady, unhurried pace. Use natural pauses. No theatrical emphasis, persuasion, whispering, or music.';
