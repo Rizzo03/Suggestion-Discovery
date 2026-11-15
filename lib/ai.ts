@@ -1,5 +1,6 @@
 import 'server-only';
 import OpenAI from 'openai';
+import { withSilentLeadIn } from './wav';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { generatedSchema, PROMPT_VERSION, StudyError, VOICE_INSTRUCTIONS } from './study';
 import { env } from './security';
@@ -52,11 +53,12 @@ export async function speech(text: string) {
     voice: voice as 'coral',
     input: text,
     instructions: VOICE_INSTRUCTIONS,
-    response_format: 'mp3',
+    response_format: 'wav',
     speed: 1,
   });
   return {
-    bytes: Buffer.from(await response.arrayBuffer()),
+    bytes: withSilentLeadIn(Buffer.from(await response.arrayBuffer()), 3),
+    leadInSeconds: 3,
     model,
     voice,
     instructions: VOICE_INSTRUCTIONS,

@@ -56,6 +56,7 @@ test('waits for listening completion, accepts zero and unable, requires explicit
   state.rounds = [
     {
       id: 'round1',
+      protocolVersion: 'eyes-closed-v1',
       number: 1,
       eye: 'closed',
       order: ['direct', 'metaphor'],
@@ -72,6 +73,7 @@ test('waits for listening completion, accepts zero and unable, requires explicit
           position: 1,
           text: 'A suggestion for accessibility.',
           audioPath: 'fixture',
+          audioLeadInSeconds: 3,
         },
         {
           id: 'suggestion2',
@@ -105,6 +107,10 @@ test('waits for listening completion, accepts zero and unable, requires explicit
   });
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Listen at your own pace.' })).toBeVisible();
+  await expect(page.getByText(/Take one gentle breath in and out/)).toBeVisible();
+  await expect(
+    page.getByText(/The audio will begin a few seconds after you press Play/),
+  ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Submit response' })).toHaveCount(0);
   expect(await page.locator('audio').getAttribute('autoplay')).toBeNull();
   // Simulated browser media completion tests UI sequencing; real provider/audio QA is separate.

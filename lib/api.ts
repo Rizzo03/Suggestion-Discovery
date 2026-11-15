@@ -25,7 +25,6 @@ import {
   csv,
   currentSuggestion,
   exactRatings,
-  eyeFor,
   intensitySchema,
   PROMPT_VERSION,
   reassess,
@@ -177,8 +176,9 @@ export async function handle(req: Request, path: string[]) {
         consentAt: at,
         baseline: { ratings: b.ratings, at },
         reassessments: [],
-        firstEye: randomInt(2) ? 'open' : 'closed',
-        allocation: { algorithm: 'node:crypto.randomInt(2); alternating thereafter; v1', at },
+        protocolVersion: 'eyes-closed-v1',
+        firstEye: 'closed',
+        allocation: { algorithm: 'fixed eyes closed; eyes-closed-v1', at },
         rounds: [],
         status: 'active',
       };
@@ -212,7 +212,8 @@ export async function handle(req: Request, path: string[]) {
         const round = {
           id: randomUUID(),
           number: n,
-          eye: eyeFor(s.state.firstEye, n),
+          eye: 'closed' as const,
+          protocolVersion: 'eyes-closed-v1',
           order,
           randomisation: { algorithm: 'Fisher-Yates; node:crypto.randomInt; v1', at },
           model: ai.model,
@@ -311,10 +312,10 @@ export async function handle(req: Request, path: string[]) {
         if (x.audioPath) return json({ ok: true });
         await participantLimit(p, 'speech', 8, 60);
         const audio = await speech(x.text);
-        const key = `${p}/${s.id}/${x.id}/${randomUUID()}.mp3`;
+        const key = `${p}/${s.id}/${x.id}/${randomUUID()}.wav`;
         const { error } = await db()
           .storage.from('suggestion-audio')
-          .upload(key, audio.bytes, { contentType: 'audio/mpeg', upsert: false });
+          .upload(key, audio.bytes, { contentType: 'audio/wav', upsert: false });
         if (error) throw new StudyError('Could not prepare audio. Please retry.', 503);
         try {
           const latest = await session(s.id, p);
@@ -334,6 +335,7 @@ export async function handle(req: Request, path: string[]) {
             voiceInstructions: audio.instructions,
             audioCreatedAt: now(),
             audioRequestId: audio.requestId,
+            audioLeadInSeconds: audio.leadInSeconds,
           });
           await commit(latest, next, 'audio_prepared', { suggestionId: x.id });
         } catch (err) {
@@ -348,7 +350,10 @@ export async function handle(req: Request, path: string[]) {
         check(error);
         if (!data) throw new StudyError('Audio unavailable.', 503);
         return new Response(data, {
-          headers: { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'private, no-store' },
+          headers: {
+            'Content-Type': x.audioPath.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg',
+            'Cache-Control': 'private, no-store',
+          },
         });
       }
       if (audioAction === 'events' && method === 'POST') {

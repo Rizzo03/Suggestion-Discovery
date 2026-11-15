@@ -33,7 +33,7 @@ Call from a secure investigator workstation with `Authorization: Bearer <RESEARC
 Datasets: `sessions`, `suggestions`, `intensity`, `events`.
 
 - `sessions`: IDs, selected experiences, baseline consent, first eye allocation/audit, status, ended timestamp, completed and partial round counts.
-- `suggestions`: one row for **every generated suggestion**, including unplayed/unrated suggestions; exact text and prompt; type/position/order, round eye condition, all model/prompt metadata; audio path, SHA-256, model, voice, instructions and request ID; listening completion, usefulness, explicit response status and timestamps.
+- `suggestions`: one row for **every generated suggestion**, including unplayed/unrated suggestions; exact text and prompt; type/position/order, round eye condition, all model/prompt metadata; audio path, SHA-256, model, voice, instructions, lead-in duration and request ID; listening completion, usefulness, explicit response status and timestamps.
 - `intensity`: one row per experience per measurement, with `after_round=0` for baseline.
 - `events`: event ID, participant/session IDs, event name, JSON payload, server timestamp. Playback payloads preserve client time, current position and duration. Randomisation and session events are included too.
 
@@ -42,3 +42,5 @@ Datasets: `sessions`, `suggestions`, `intensity`, `events`.
 Every request pages over 200 base sessions (or 200 events for the events dataset). The expanded suggestions and intensity datasets may contain more than 200 CSV rows. Continue with `offset` set to `X-Next-Offset` until it is empty. Retain the initial `X-Export-Until` value as the `until` parameter on all subsequent pages/datasets; optional `after` and `until` are ISO timestamps filtering **creation time**. Retain the same filter parameters throughout. Each page has its own header; concatenate CSV data without duplicating headers. An empty page is an empty CSV body.
 
 This endpoint is not a transactionally frozen snapshot across requests: live sessions can change while an export is underway. For a reproducible study extract, stop collection in the protected environment, wait for in-flight operations to settle, export every page and archive the raw datasets with the extraction timestamp/protocol version. Sessions updated after their creation still appear under their creation window; this is not an incremental change feed. Use `research_events` for append-only event history. Backups/extracts need their own approved access and retention controls.
+
+New rounds carry `round_protocol_version=eyes-closed-v1` and `eye_state=closed`. New sessions expose `protocol_version`; historical records without it export as `eyes-comparison-v1`. `audio_lead_in_seconds` is 3 for new WAV recordings and 0 for legacy audio. Playback duration/position includes the silence, so speech-relative analysis should subtract the recorded lead-in.

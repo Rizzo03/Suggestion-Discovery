@@ -62,6 +62,7 @@ vi.mock('../lib/ai', () => ({
     bytes: Buffer.from('audio-fixture'),
     model: 'tts-test',
     voice: 'coral',
+    leadInSeconds: 3,
     instructions: 'standard',
     requestId: 'audio-request',
   }),
@@ -90,25 +91,24 @@ beforeEach(() => {
   mock.events = [];
   mock.contacts = [];
   mock.uploads.clear();
-  mock.generate
-    .mockReset()
-    .mockResolvedValue({
-      suggestions: TYPES.map((type, i) => ({
-        type,
-        text: `Suggestion ${i} ` + 'gentle wording '.repeat(6),
-      })),
-      model: 'text-test',
-      responseId: 'generation-test',
-      prompt: 'exact prompt',
-    });
+  mock.generate.mockReset().mockResolvedValue({
+    suggestions: TYPES.map((type, i) => ({
+      type,
+      text: `Suggestion ${i} ` + 'gentle wording '.repeat(6),
+    })),
+    model: 'text-test',
+    responseId: 'generation-test',
+    prompt: 'exact prompt',
+  });
   process.env.RESEARCH_EXPORT_TOKEN = 'a'.repeat(40);
 });
 describe('server route protocol with mocked external providers', () => {
-  it('runs 15 suggestions, blocks skipped responses/check-ins, alternates, then stops safely', async () => {
+  it('runs 15 suggestions, blocks skipped responses/check-ins, keeps eyes closed, then stops safely', async () => {
     for (let r = 0; r < 3; r++) {
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(200);
       const round = mock.session!.state.rounds.at(-1)!;
-      expect(round.eye).toBe(r % 2 ? 'open' : 'closed');
+      expect(round.eye).toBe('closed');
+      expect(round.protocolVersion).toBe('eyes-closed-v1');
       expect(new Set(round.order)).toEqual(new Set(TYPES));
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(409);
       for (let i = 0; i < 5; i++) {

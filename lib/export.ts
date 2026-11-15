@@ -3,6 +3,7 @@ export function sessionRows(sessions: Session[]) {
   return sessions.map((s) => ({
     participant_id: s.participant_id,
     session_id: s.id,
+    protocol_version: s.state.protocolVersion ?? 'eyes-comparison-v1',
     created_at: s.created_at,
     status: s.state.status,
     ended_at: s.state.endedAt,
@@ -23,6 +24,7 @@ export function suggestionRows(sessions: Session[]) {
         participant_id: s.participant_id,
         session_id: s.id,
         round_id: r.id,
+        round_protocol_version: r.protocolVersion ?? 'eyes-comparison-v1',
         round_number: r.number,
         round_complete: !!r.completedAt,
         round_completed_at: r.completedAt,
@@ -45,6 +47,7 @@ export function suggestionRows(sessions: Session[]) {
         voice_instructions: x.voiceInstructions,
         audio_created_at: x.audioCreatedAt,
         audio_request_id: x.audioRequestId,
+        audio_lead_in_seconds: x.audioLeadInSeconds ?? 0,
         heard_at: x.heardAt,
         response_status: !x.response
           ? 'missing'

@@ -3,7 +3,6 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import {
   currentSuggestion,
   EXPERIENCES,
-  eyeFor,
   needsReassessment,
   Study,
   USEFULNESS_HELP,
@@ -642,7 +641,7 @@ export function Discovery() {
                     <h2>
                       {completed ? 'Ready for another perspective?' : 'Make yourself comfortable.'}
                     </h2>
-                    <EyeInstruction eye={eyeFor(state.firstEye, state.rounds.length + 1)} />
+                    <EyeInstruction eye="closed" delayed />
                     <p>
                       Five suggestions, presented one at a time in a random order. You choose when
                       each starts. After each recording, provide a usefulness response before
@@ -765,7 +764,7 @@ export function Discovery() {
     </div>
   );
 }
-function EyeInstruction({ eye }: { eye: 'open' | 'closed' }) {
+function EyeInstruction({ eye, delayed = false }: { eye: 'open' | 'closed'; delayed?: boolean }) {
   return (
     <div className="eye-instruction">
       <span className="eye-symbol" aria-hidden="true">
@@ -775,7 +774,9 @@ function EyeInstruction({ eye }: { eye: 'open' | 'closed' }) {
         <strong>This round: eyes {eye}</strong>
         <p>
           {eye === 'closed'
-            ? 'Close your eyes only while listening. Open them immediately after each suggestion to give your rating.'
+            ? delayed
+              ? 'Take one gentle breath in and out, at your own pace. Press Play, then close your eyes. The audio will begin a few seconds after you press Play. When it finishes, open your eyes and rate how useful the suggestion was.'
+              : 'This saved round uses the earlier protocol. Close your eyes only while listening and open them immediately after the audio to give your rating.'
             : 'Keep your eyes open while listening. After each suggestion, give your rating.'}{' '}
           The next suggestion never starts automatically.
         </p>
@@ -890,7 +891,13 @@ function Listening({
         ))}
       </div>
       <h2>Listen at your own pace.</h2>
-      <EyeInstruction eye={round.eye} />
+      <EyeInstruction
+        eye={round.eye}
+        delayed={
+          x.audioLeadInSeconds !== undefined ||
+          (!x.audioPath && round.protocolVersion === 'eyes-closed-v1')
+        }
+      />
       <div className="audio-player">
         <div className={`wave ${playing ? 'playing' : ''}`} aria-hidden="true">
           {[18, 30, 24, 45, 36, 58, 43, 28, 52, 36, 24, 46, 57, 32, 20, 39, 27, 17, 29].map(
@@ -907,6 +914,7 @@ function Listening({
             onClick={() =>
               void run(async () => {
                 await api(`${url}/audio`, {});
+                save(await api<PublicSession>(`sessions/${session.id}`));
                 setPrepared(true);
               })
             }

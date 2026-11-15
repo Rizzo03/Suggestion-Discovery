@@ -12,10 +12,10 @@ The consent screen prominently explains that coded session data are used for res
 
 1. Choose one or more of the eleven predefined challenging-experience labels; Other has no free text.
 2. Submit an integer 0–10 baseline intensity for every selected label. Zero is meaningful. No rating is preselected.
-3. Draw first eye condition with `node:crypto.randomInt(2)` and persist the realised allocation and algorithm timestamp in the baseline session document. Alternate subsequent round conditions deterministically. The same first allocation persists across resumed sessions; a new session receives a new allocation.
+3. All new rounds use eyes-closed listening under `eyes-closed-v1`. New sessions record a fixed closed-eye allocation and timestamp. Earlier saved rounds retain their original open/closed allocation; no existing research record is rewritten. New rounds in a resumed session use the new protocol, with round-level protocol metadata distinguishing the change.
 4. Prepare five texts with unique required types in one structured-output API response. Validate output and screen it with moderation. Fail closed on errors/refusal/flagged content. A safety prompt restricts medical claims, unsafe contexts and coercion. Model-generated safety cannot be guaranteed; review content and provider suitability before recruitment.
 5. Shuffle all five types using a fresh Fisher–Yates draw with `crypto.randomInt` on every round. Store realised type order, per-suggestion position, algorithm/timestamp and round eye condition before showing audio. Random draws are not regenerated on refresh. The stored order is the audit record; no shared deterministic seed is used.
-6. Show the assigned eye instructions before preparation and with each suggestion. The eye state applies only during listening; closed-eye listeners open their eyes immediately after each recording to rate. Native controls allow pause/seek/replay of the current suggestion. No audio or next suggestion auto-starts.
+6. Show eyes-closed instructions before preparation and with each new suggestion. Ask participants to take one gentle breath in and out at their own pace, press Play and then close their eyes. New recordings contain exactly three seconds of silence before speech begins; disclose that delay before playback. The silent lead-in is part of the stored WAV file, playback duration and SHA-256 hash. The eye state applies only during listening; closed-eye listeners open their eyes immediately after each recording to rate. Native controls allow pause/seek/replay of the current suggestion. No audio or next suggestion auto-starts.
 7. Record client-reported play, pause, seek, error and ended events with position, duration, client timestamp and server timestamp. The server accepts a listening completion only for the current suggestion with prepared audio and an ended position at its reported duration. This is not fraud-resistant exposure verification. Seeking, muted playback, reading transcripts or fabricated clients can invalidate assumptions; use event data for exclusions under an approved analysis plan.
 8. After listening completion, require the exact usefulness question and standard explanation. Allow integer 0–10 or explicit `null` for Unable to rate. A missing response differs from unable. The exploratory proposed measure is not presented as validated. Selection may encompass several experiences; the screen reminds participants of all selected labels.
 9. Commit each response before exposing the next suggestion. The final response marks a round complete. After each multiple of three complete rounds, collect the same intensity questions for all selected experiences before a subsequent round. A stopped partial round never counts toward this interval.
@@ -23,24 +23,26 @@ The consent screen prominently explains that coded session data are used for res
 
 ## Storage and concurrency
 
-| Table                  | Purpose                                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------------------ |
-| `participants`         | Participant UUID, optional recovery hash, creation timestamp                               |
-| `identity_tokens`      | Hashed device credentials and expiry, never exported                                       |
-| `sessions`             | Participant ownership, creation/update timestamps, CAS version and versioned `state` JSONB |
-| `research_events`      | Append-only application event stream: session, participant, event payload, server time     |
-| `email_requests`       | Separate encrypted email, session linkage, explicit consent version/time, delivery status  |
-| `rate_limits`          | Bounded time-window counters keyed by HMAC of address/scope or hashed participant/scope    |
-| private Storage bucket | Persisted generated MP3 files under participant/session/suggestion/random-asset prefixes   |
+| Table                  | Purpose                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `participants`         | Participant UUID, optional recovery hash, creation timestamp                                                              |
+| `identity_tokens`      | Hashed device credentials and expiry, never exported                                                                      |
+| `sessions`             | Participant ownership, creation/update timestamps, CAS version and versioned `state` JSONB                                |
+| `research_events`      | Append-only application event stream: session, participant, event payload, server time                                    |
+| `email_requests`       | Separate encrypted email, session linkage, explicit consent version/time, delivery status                                 |
+| `rate_limits`          | Bounded time-window counters keyed by HMAC of address/scope or hashed participant/scope                                   |
+| private Storage bucket | Persisted generated WAV files (plus retained legacy MP3 files) under participant/session/suggestion/random-asset prefixes |
 
 The study document contains selected experiences; baseline and repeated measurements; consent; initial allocation; complete ordered rounds; exact text, prompt and AI metadata; audio path/hash/request metadata; each usefulness response and timestamp; and completion information. This deliberately uses one transactional document per session rather than duplicated normalised rating rows. CSV exports flatten it into analysis tables. Very long sessions increase document size and CAS-write cost; load-test realistic pilot lengths before enabling participants at scale. No artificial session-round limit is imposed.
 
 `commit_session` compares participant ownership and expected version, updates state and appends its audit event in one PostgreSQL transaction. A stale writer receives a conflict. Active sessions are unique per participant. A round-generation lease prevents duplicate generation; a crashed lease can be retried after five minutes. A late generation cannot overwrite a stop or other version change. Audio assets use unique paths and are deleted on failed state commit. An upload completed just before process termination may be orphaned; an investigator must reconcile Storage prefixes with retained `audioPath` records under the approved retention plan.
 
-Prompt version: `suggestions-1`. Consent version: `pilot-consent-2`. Email consent: `email-feedback-2`. Changes to content, voice, allocation or measures should increment the relevant protocol version and be reviewed. Keep model and voice environment variables fixed during a pilot cohort; metadata records the requested model and voice for every generated audio file. The Speech API does not guarantee a model build identifier or byte-identical regeneration. Retain the generated audio and SHA-256 hash for audit.
+Prompt version: `suggestions-1`. Consent version: `pilot-consent-3`. Email consent: `email-feedback-2`. Changes to content, voice, allocation or measures should increment the relevant protocol version and be reviewed. Keep model and voice environment variables fixed during a pilot cohort; metadata records the requested model and voice for every generated audio file. The Speech API does not guarantee a model build identifier or byte-identical regeneration. Retain the generated audio and SHA-256 hash for audit.
 
 ## Session completion and interpretation
 
 An intentionally ended session has `session_complete=true` in the sessions export. This means the participant ended the session, not that a prescribed dose was completed. Use `rounds_complete`, `partial_round`, individual response statuses and completion timestamps in analysis. Inactive-but-unended sessions remain `active`; do not infer exposure or completion from page visits. Neither usefulness ratings nor intensity changes establish therapeutic efficacy.
 
 Consent revision 2 makes research use and optional email explicit on the main consent screen and uses “participant ID” / “coded data” rather than promising complete anonymity. Existing session and email consent versions are retained; new sessions and new email opt-ins record the revised versions. No database migration is needed.
+
+Protocol revision `eyes-closed-v1` removes the eyes-open comparison for new rounds. Suggestion-type randomisation and three-round reassessment timing remain unchanged. New audio metadata records `audioLeadInSeconds=3`; legacy recordings without that field have zero added lead-in. Retained legacy rounds display their earlier eye instructions. Apply the additional WAV Storage migration before preparing new audio.

@@ -8,6 +8,7 @@ beforeAll(async () => {
     `create role anon; create role authenticated; create role service_role bypassrls; create schema storage; create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);`,
   );
   await db.exec(readFileSync('supabase/migrations/202611150001_pilot.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202611160001_wav_lead_in.sql', 'utf8'));
 });
 afterAll(async () => {
   await db?.close();
