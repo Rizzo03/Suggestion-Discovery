@@ -25,8 +25,8 @@ test('consent, multiple experiences and explicit baseline ratings on small and l
   await page.getByLabel('I am 18 or older').check();
   await page.getByLabel('I have read the information').check();
   await next.click();
-  await page.getByText('Fear', { exact: true }).click();
-  await page.getByText('Stress', { exact: true }).click();
+  await page.getByRole('checkbox', { name: /^Fear/ }).check();
+  await page.getByRole('checkbox', { name: /^Stress/ }).check();
   await page.getByRole('button', { name: 'Continue with 2 selections' }).click();
   await expect(page.getByRole('button', { name: 'Begin session', exact: true })).toBeDisabled();
   await page
@@ -150,4 +150,23 @@ test('shows email only after ending a session and permits a new session', async 
   await expect(page.getByRole('button', { name: 'Request email summary' })).toBeDisabled();
   await page.getByRole('button', { name: 'Begin a new session' }).click();
   await expect(page.getByText('Your choice, at every step.')).toBeVisible();
+});
+
+test('restores a pending email request after refresh without asking for the address again', async ({
+  page,
+}) => {
+  const state = fixture();
+  state.status = 'stopped';
+  await page.route('**/api/me', (route) =>
+    route.fulfill({
+      json: {
+        participantId: id,
+        recoveryEnabled: false,
+        session: { id, state, created_at: new Date().toISOString(), feedbackStatus: 'pending' },
+      },
+    }),
+  );
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Cancel pending email request' })).toBeVisible();
+  await expect(page.getByLabel('Email address', { exact: true })).toHaveCount(0);
 });
