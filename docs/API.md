@@ -1,0 +1,44 @@
+# API and research export
+
+All routes are Next.js server route handlers. Responses are `Cache-Control: no-store`; errors contain a safe message. Participant mutation requests require same-origin `Origin` and JSON bodies (except DELETE). Participant credentials use HTTP-only cookies, never a participant ID supplied in a body. UUID ownership is checked for every session access. All participant routes require the private pilot gate; unauthorised investigator routes require an independent bearer token.
+
+| Method / route under `/api`                                      | Purpose                                                           |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `POST access` `{code}`                                           | Verify private invitation; 24h pilot cookie                       |
+| `POST identity`                                                  | New anonymous participant/device token                            |
+| `POST recover` `{code}`                                          | Reconnect to ID on another device                                 |
+| `GET me`                                                         | ID, recovery availability and latest saved session                |
+| `POST recovery`                                                  | Create/replace optional recovery code; returned once              |
+| `POST logout`                                                    | Revoke current device token and cookie                            |
+| `POST sessions` `{experiences,ratings,consent:true,adult:true}`  | Versioned consent, complete baseline, first allocation            |
+| `GET sessions/:id`                                               | Owned session state                                               |
+| `POST sessions/:id/round`                                        | Claim generation lease; create all five texts and persisted order |
+| `POST sessions/:id/intensity` `{ratings}`                        | Due three-round reassessment only                                 |
+| `POST sessions/:id/stop`                                         | End at any point; idempotent for ended session                    |
+| `POST sessions/:id/suggestions/:suggestionId/audio`              | Prepare/cache current suggestion speech                           |
+| `GET sessions/:id/suggestions/:suggestionId/audio`               | Stream private current audio through ownership-checked server     |
+| `POST sessions/:id/suggestions/:suggestionId/events`             | Playback `event`, `position`, `duration`, ISO `clientAt`          |
+| `POST sessions/:id/suggestions/:suggestionId/response` `{value}` | Required integer 0–10 or explicit `null` after ended event        |
+| `POST sessions/:id/feedback` `{email,consent:true}`              | Separate opt-in for ended session; one request/session            |
+| `DELETE sessions/:id/feedback`                                   | Cancel a pending request; erase contact ciphertext                |
+| `GET research/export?dataset=...`                                | Investigator-only CSV; see below                                  |
+| `POST research/send-feedback`                                    | Investigator-only private outbox dispatch; at most ten items      |
+
+Typical errors: 400 invalid data; 401 missing identity/investigator auth; 403 invalid origin/pilot access; 404 unknown/unowned session; 409 protocol/concurrency conflict; 429 rate limit; 502 provider failure; 503 closed/unconfigured pilot or database problem. Reload saved state after a conflict. The server does not log request bodies, prompts, emails, provider error bodies or secrets.
+
+## CSV export
+
+Call from a secure investigator workstation with `Authorization: Bearer <RESEARCH_EXPORT_TOKEN>`. Do not put the token in a query string. Exports are downloads, not participant-facing links. Prefer a secure API client using a secret variable; avoid shell history or command lines containing a literal token.
+
+Datasets: `sessions`, `suggestions`, `intensity`, `events`.
+
+- `sessions`: IDs, selected experiences, baseline consent, first eye allocation/audit, status, ended timestamp, completed and partial round counts.
+- `suggestions`: one row for **every generated suggestion**, including unplayed/unrated suggestions; exact text and prompt; type/position/order, round eye condition, all model/prompt metadata; audio path, SHA-256, model, voice, instructions and request ID; listening completion, usefulness, explicit response status and timestamps.
+- `intensity`: one row per experience per measurement, with `after_round=0` for baseline.
+- `events`: event ID, participant/session IDs, event name, JSON payload, server timestamp. Playback payloads preserve client time, current position and duration. Randomisation and session events are included too.
+
+`response_status` distinguishes `missing`, `unable_to_rate` and `rated`; numeric zero is retained. Formula-like cells are prefixed with an apostrophe and all cells are CSV quoted to reduce spreadsheet injection. The apostrophe may need removal in analysis tools after safe text import. No email address, recovery hash, sign-in hash, contact key or provider key is exported.
+
+Every request pages over 200 base sessions (or 200 events for the events dataset). The expanded suggestions and intensity datasets may contain more than 200 CSV rows. Continue with `offset` set to `X-Next-Offset` until it is empty. Retain the initial `X-Export-Until` value as the `until` parameter on all subsequent pages/datasets; optional `after` and `until` are ISO timestamps filtering **creation time**. Retain the same filter parameters throughout. Each page has its own header; concatenate CSV data without duplicating headers. An empty page is an empty CSV body.
+
+This endpoint is not a transactionally frozen snapshot across requests: live sessions can change while an export is underway. For a reproducible study extract, stop collection in the protected environment, wait for in-flight operations to settle, export every page and archive the raw datasets with the extraction timestamp/protocol version. Sessions updated after their creation still appear under their creation window; this is not an incremental change feed. Use `research_events` for append-only event history. Backups/extracts need their own approved access and retention controls.
