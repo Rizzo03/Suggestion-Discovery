@@ -5,13 +5,13 @@ export const sampleContext: BodyContext = {
 };
 export const contentFixture = () => ({
   sensory_discriminative: {
-    goal: 'Explore the perceived boundaries of sensation in the lower back',
+    goal: 'Explore possible softer, less intense sensation in the lower back',
     direct:
-      'Your lower back can be noticed as an area with changing sensory boundaries. Notice its shape without requiring a change in intensity. You can stop whenever you wish.',
+      'Your lower back can be noticed as an area with changing sensory boundaries. You can stop whenever you wish. Notice the possibility of softer sensory qualities within that area.',
     imagery:
-      'Imagine your lower back feeling gently warm, with the sensation occupying a smaller area. Imagine the temperature and the boundaries of that sensation directly. You can stop imagining whenever you wish.',
+      'Imagine your lower back feeling gently warm, with the sensation occupying a smaller area. You can stop imagining whenever you wish. Imagine its pressure easing and its sensory qualities softening.',
     metaphorical:
-      'The sensation in your lower back can be compared with a patch of weather. Its perceived edges may have different qualities. You can set aside this comparison whenever you wish.',
+      'The sensation in your lower back can be compared with a patch of weather. You can set aside this comparison whenever you wish. Picture that weather gradually becoming milder in its strength.',
   },
   affective_motivational: {
     goal: 'Explore agency in responding to discomfort in the lower back',

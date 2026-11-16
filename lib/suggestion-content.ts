@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CONTENT_CATEGORIES, DELIVERY_STYLES, generatedSchema } from './study';
+import { CONTENT_CATEGORIES, DELIVERY_STYLES, DeliveryStyle, generatedSchema } from './study';
 import { BodyContext, spokenLocation } from './body-context';
 const targetSchema = z.object({
   goal: z.string().min(10).max(400),
@@ -15,25 +15,45 @@ export function containsTry(text: string) {
   return /\b(?:try|tries|tried|trying)\b/i.test(text.normalize('NFKC'));
 }
 const normal = (text: string) => text.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
+export function sensoryClosing(style: DeliveryStyle, context: BodyContext) {
+  const location = spokenLocation(context.primaryLocation);
+  if (style === 'imagery')
+    return `Imagine the sensation in your ${location} becoming softer and less intense.`;
+  if (style === 'metaphorical')
+    return `Let this comparison suggest a softer, less intense sensation in your ${location}.`;
+  return `The sensation in your ${location} can feel softer and less intense.`;
+}
 export function assembleSuggestions(
   input: z.infer<typeof roundContentSchema>,
   context: BodyContext,
 ) {
   const location = normal(spokenLocation(context.primaryLocation));
   const suggestions = CONTENT_CATEGORIES.flatMap((contentCategory) =>
-    DELIVERY_STYLES.map((deliveryStyle) => ({
-      type: `${contentCategory}_${deliveryStyle}`,
-      contentCategory,
-      deliveryStyle,
-      targetGoal: input[contentCategory].goal,
-      text: input[contentCategory][deliveryStyle].trim(),
-    })),
+    DELIVERY_STYLES.map((deliveryStyle) => {
+      const body = input[contentCategory][deliveryStyle].trim();
+      const closingSentence =
+        contentCategory === 'sensory_discriminative'
+          ? sensoryClosing(deliveryStyle, context)
+          : undefined;
+      return {
+        type: `${contentCategory}_${deliveryStyle}`,
+        contentCategory,
+        deliveryStyle,
+        targetGoal: input[contentCategory].goal,
+        text: closingSentence
+          ? `${body}${/[.!?…]$/.test(body) ? '' : '.'} ${closingSentence}`
+          : body,
+        ...(closingSentence
+          ? { closingSentence, generatedBody: body, textAssembly: 'sensory-closing-1' as const }
+          : {}),
+      };
+    }),
   );
   const checked = generatedSchema.parse({ suggestions });
   if (suggestions.some((x) => containsTry(x.text) || containsTry(x.targetGoal)))
     throw new Error('Suggestion contains prohibited wording');
   for (const suggestion of suggestions) {
-    const text = normal(suggestion.text);
+    const text = normal(input[suggestion.contentCategory][suggestion.deliveryStyle]);
     if (!text.includes(location))
       throw new Error('Every suggestion must name the selected body area');
     if (suggestion.deliveryStyle === 'direct' && !text.startsWith(`your ${location}`))

@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { zodResponseFormat } from 'openai/helpers/zod';
-import { assembleSuggestions, containsTry, roundContentSchema } from '../lib/suggestion-content';
+import {
+  assembleSuggestions,
+  containsTry,
+  roundContentSchema,
+  sensoryClosing,
+} from '../lib/suggestion-content';
 import { CONTENT_CATEGORIES, DELIVERY_STYLES, TYPES } from '../lib/study';
 import { contentFixture, sampleContext } from './content-fixture';
 describe('two experiential targets crossed with three delivery forms', () => {
@@ -14,7 +19,11 @@ describe('two experiential targets crossed with three delivery forms', () => {
         const x = result.suggestions.find(
           (x) => x.contentCategory === category && x.deliveryStyle === style,
         )!;
-        expect(x.text).toBe(input[category][style]);
+        expect(x.text).toBe(
+          category === 'sensory_discriminative'
+            ? `${input[category][style]} ${sensoryClosing(style, sampleContext)}`
+            : input[category][style],
+        );
         expect(x.text.toLowerCase()).toContain('lower back');
         expect(x.targetGoal).toBe(input[category].goal);
       }
@@ -83,4 +92,33 @@ it('rejects explicit comparisons in imagery for both targets while retaining met
     }
   }
   expect(assembleSuggestions(contentFixture(), sampleContext).suggestions).toHaveLength(6);
+});
+
+it('ends all sensory forms with a possible physical change and preserves affective text', () => {
+  const input = contentFixture();
+  for (const location of ['Abdomen', 'Several body areas'] as const) {
+    const context = { ...sampleContext, primaryLocation: location };
+    const area = location === 'Abdomen' ? 'abdomen' : 'selected body areas';
+    const local = JSON.parse(JSON.stringify(input).replaceAll('lower back', area));
+    const result = assembleSuggestions(local, context);
+    for (const suggestion of result.suggestions) {
+      if (suggestion.contentCategory === 'sensory_discriminative') {
+        expect(suggestion.text.endsWith(sensoryClosing(suggestion.deliveryStyle, context))).toBe(
+          true,
+        );
+        expect(suggestion.generatedBody).toBe(
+          local.sensory_discriminative[suggestion.deliveryStyle],
+        );
+        expect(suggestion.textAssembly).toBe('sensory-closing-1');
+        expect(suggestion.closingSentence).toMatch(/softer.*less intense/);
+        expect(suggestion.closingSentence).toContain(area);
+        expect(suggestion.closingSentence).not.toMatch(/will|must|pain.free|calm|happy/);
+        if (suggestion.deliveryStyle === 'imagery')
+          expect(suggestion.closingSentence).toMatch(/^Imagine/);
+      } else {
+        expect(suggestion.text).toBe(local.affective_motivational[suggestion.deliveryStyle]);
+        expect(suggestion.closingSentence).toBeUndefined();
+      }
+    }
+  }
 });

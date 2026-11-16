@@ -251,6 +251,9 @@ export async function handle(req: Request, path: string[]) {
             contentCategory: ai.suggestions.find((x) => x.type === type)!.contentCategory,
             deliveryStyle: ai.suggestions.find((x) => x.type === type)!.deliveryStyle,
             targetGoal: ai.suggestions.find((x) => x.type === type)!.targetGoal,
+            closingSentence: ai.suggestions.find((x) => x.type === type)!.closingSentence,
+            generatedBody: ai.suggestions.find((x) => x.type === type)!.generatedBody,
+            textAssembly: ai.suggestions.find((x) => x.type === type)!.textAssembly,
             position: i + 1,
           })),
         };
