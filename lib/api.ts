@@ -30,12 +30,12 @@ import {
   reassess,
   respond,
   Session,
-  shuffle,
   Study,
   StudyError,
-  TYPES,
+  STUDY_PROTOCOL_VERSION,
 } from './study';
 import { generate, speech } from './ai';
+import { suggestionOrder } from './order';
 import { intensityRows, sessionRows, suggestionRows } from './export';
 const uuid = z.string().uuid();
 const now = () => new Date().toISOString();
@@ -174,9 +174,15 @@ export async function handle(req: Request, path: string[]) {
         experiences: b.experiences,
         consentVersion: CONSENT_VERSION,
         consentAt: at,
+        eligibility: {
+          physicalSymptomsConfirmed: b.physicalEligibility,
+          adult: b.adult,
+          at,
+          version: STUDY_PROTOCOL_VERSION,
+        },
         baseline: { ratings: b.ratings, at },
         reassessments: [],
-        protocolVersion: 'eyes-closed-v1',
+        protocolVersion: STUDY_PROTOCOL_VERSION,
         firstEye: 'closed',
         allocation: { algorithm: 'fixed eyes closed; eyes-closed-v1', at },
         rounds: [],
@@ -208,17 +214,21 @@ export async function handle(req: Request, path: string[]) {
         const ai = await generate(s.state.experiences);
         const at = now();
         const n = s.state.rounds.length + 1;
-        const order = shuffle(TYPES, randomInt);
+        const order = suggestionOrder(randomInt);
         const round = {
           id: randomUUID(),
           number: n,
           eye: 'closed' as const,
-          protocolVersion: 'eyes-closed-v1',
+          protocolVersion: STUDY_PROTOCOL_VERSION,
           order,
-          randomisation: { algorithm: 'Fisher-Yates; node:crypto.randomInt; v1', at },
+          randomisation: {
+            algorithm:
+              'uniform eligible permutations; matched content pairs nonadjacent; crypto.randomInt; v1',
+            at,
+          },
           model: ai.model,
           promptVersion: PROMPT_VERSION,
-          pairedInstructionBodies: ai.pairedInstructionBodies,
+          instructionPairs: ai.instructionPairs,
           prompt: ai.prompt,
           responseId: ai.responseId,
           createdAt: at,
@@ -226,6 +236,8 @@ export async function handle(req: Request, path: string[]) {
             id: randomUUID(),
             type,
             text: ai.suggestions.find((x) => x.type === type)!.text,
+            contentCategory: ai.suggestions.find((x) => x.type === type)!.contentCategory,
+            deliveryStyle: ai.suggestions.find((x) => x.type === type)!.deliveryStyle,
             position: i + 1,
           })),
         };

@@ -1,38 +1,36 @@
 # Suggestion Discovery
 
-A mobile-friendly, invitation-only technical pilot for exploratory research into responses to audio-delivered therapeutic-style suggestions. Built with Next.js App Router, TypeScript, Supabase and OpenAI; prepared for Vercel. **Not deployed. Not treatment. Not an ethics-approved recruitment platform.** No therapeutic efficacy or measurement-validation claims.
+An invitation-only, mobile-friendly listening platform for **adults currently experiencing physical pain or an uncomfortable physical sensation**. Next.js, TypeScript, Supabase and OpenAI; hosted as a protected Vercel technical pilot. Not treatment and not approved for public recruitment. No therapeutic efficacy or measure-validation claims.
 
-## What is implemented
+Developed by **Dr Rod Rizzo — Pain Scientist — Centre for Pain IMPACT, Neuroscience Research Australia**. Contact: [r.rizzo@neura.edu.au](mailto:r.rizzo@neura.edu.au).
 
-- Anonymous device IDs with HTTP-only sign-in cookies; optional high-entropy recovery codes for returning across devices. No name or account email required.
-- Separate, versioned research consent; all eleven experience categories; explicit baseline 0–10 intensity responses for every selection.
-- Five distinct OpenAI-generated suggestions per round: metaphor, permissive, direct, imagery and attentional shift. Structured output validation and moderation fail closed. Full text, exact prompt, prompt version, actual returned model and provider response ID are retained.
-- Eyes-closed-only listening for all new rounds, with a gentle breathing instruction and a three-second silent lead-in after Play. Earlier eye-allocation records are preserved. Independent Fisher–Yates presentation order per round, with algorithm, timestamp and realised order preserved.
-- Server-generated OpenAI speech, a fixed default voice/pacing instruction, AI-voice disclosure, accessible native audio controls and private cached WAV audio with a three-second silent lead-in. Audio is prepared and played only on request. No autoplay or automatic next suggestion.
-- Required usefulness response after each listening completion: integer 0–10 or explicit “Unable to rate”. The precise research question and standard explanation are shown; no rating is preselected.
-- A required intensity check-in after every three **complete** rounds, before a further round. No round-count ceiling. Stopping, partial rounds, resume and session timestamps are recorded.
-- Optional neutral exploration challenge; no reward, improvement target, leaderboard or usefulness-based encouragement.
-- Optional separately consented **post-session** email summary, encrypted contact storage, delivery outbox and investigator-only dispatcher. No email collection or feedback during active rounds.
-- Investigator-only paginated CSV exports for sessions/randomisation, suggestions/responses/AI/audio metadata, intensity measurements and playback events. Contact addresses, credential hashes and secrets are excluded.
-- Deny-by-default database permissions and RLS; all access through server ownership checks. Compare-and-swap state updates and events are committed in a single database transaction.
+## Current participant flow
+
+1. Create a random participant ID or optionally recover an earlier ID. No name or email required.
+2. Read the coded-data research information and separately confirm adult/private-invitation eligibility, current physical symptoms and research consent.
+3. Select **Physical pain**, **Uncomfortable physical sensation**, or both; rate each on 0–10. At least one selected symptom must have a baseline intensity above zero. Subsequent measurements may be zero.
+4. Listen with eyes closed to **six suggestions per round**: three content categories × two wording styles.
+5. After each recording, open eyes and submit a required 0–10 usefulness response or Unable to rate before the next suggestion becomes available.
+6. Reassess every selected physical symptom after three complete rounds (**18 suggestions**), before continuing. Stop at any point or continue without a round-count ceiling.
+7. Optionally request one separately consented feedback email after ending a session.
+
+| Content category       | Operational boundary                                                                                     | Styles              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------- | ------------------- |
+| External attention     | Notice real neutral external sounds or contact with a supporting surface; no imagined scene or metaphor  | Direct + permissive |
+| Imagery                | Imagine a concrete sensory scene; no symbolic comparison or instruction to attend to actual surroundings | Direct + permissive |
+| Metaphorical reframing | Explicit everyday comparison concerning one's relationship to the physical symptom                       | Direct + permissive |
+
+The model generates one list of shared instruction bodies per category. The server assembles its pair using only **“Now, …”** versus **“Invite yourself to …”**; bodies and order are identical. A random round order is sampled uniformly from all permutations that keep each matched pair nonadjacent. These operational categories are not a validated taxonomy; review generated content for adherence before recruitment. Pair separation reduces immediate repetition but does not eliminate order/carryover effects.
+
+Speech uses the same voice/instructions and **0.8× speed**, with **four seconds of inserted silence between sentences** and **three seconds before speech begins**. Native controls never autoplay. “Try” and its word forms are rejected before new audio generation. Existing cached recordings are retained unchanged.
 
 ## Local setup
 
-Use Node.js 24 and npm. The lockfile pins the installed dependencies.
+Use Node.js 24. Run `npm ci`, copy `.env.example` to `.env.local`, configure server-only credentials, then run `npm run dev`. The pilot defaults to closed (`PILOT_ENABLED=false`); there is no production demo bypass. With a restricted global npm cache, use `npm ci --cache ../work/npm-cache`.
 
-```sh
-npm ci
-cp .env.example .env.local
-npm run dev
-```
+Create an approved-region Supabase project and apply both files in `supabase/migrations/` in order. They create the restricted research/credential tables and private `suggestion-audio` bucket, including WAV support. There is **no new database migration for the six-condition update**: the versioned session document stores the new fields. Never put secrets in `NEXT_PUBLIC_*`, source control, URLs, chat or logs.
 
-The page is available at `http://localhost:3000`. The pilot is **closed by default** (`PILOT_ENABLED=false`). It cannot collect data or generate suggestions until you configure Supabase, OpenAI, strong secrets and explicitly enable it. There is no production demo bypass.
-
-Create a Supabase project in an approved region. Apply `supabase/migrations/202611150001_pilot.sql` using the Supabase SQL editor or your established Supabase migration workflow. The migration assumes a standard Supabase project with `anon`, `authenticated`, `service_role` and Storage installed. It creates the private `suggestion-audio` bucket. Use the server service-role key; no browser Supabase client or public anon key is required.
-
-Configure the variables listed in `.env.example`. Generate distinct random secrets of at least 32 characters for `SESSION_SECRET`, `PILOT_ACCESS_CODE` and `RESEARCH_EXPORT_TOKEN`; generate the separate encryption key with `openssl rand -base64 32`. Keep `.env.local` out of version control. Never put these values in `NEXT_PUBLIC_*`, a PR, browser JavaScript, URLs, screenshots, or logs.
-
-For development installations with a restricted global npm cache, use `npm ci --cache ../work/npm-cache`.
+See [deployment](docs/DEPLOYMENT.md), [protocol/data model](docs/PROTOCOL.md), [API/CSV exports](docs/API.md) and [privacy/operations](docs/PRIVACY.md) for configuration, retention and withdrawal handling.
 
 ## Verification
 
@@ -44,22 +42,12 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Unit and route tests exercise the real protocol transitions with mocked AI/storage services. PostgreSQL tests use PGlite to execute the actual migration and verify grants, RLS flags, atomic updates/events, ownership, uniqueness and rate limits. Browser tests exercise consent, multiple intensity ratings, listening/rating gating, explicit next-audio preparation, post-session email placement, and narrow/desktop layouts. Media completion in browser tests is simulated. CI runs the same checks; it uses no live research data or secrets.
+Core tests cover eligibility/baseline validation, six-condition assembly, prohibited wording, nonadjacent randomisation, protocol transitions, reassessment, legacy retention, security, actual PostgreSQL-compatible migrations and measured WAV silence. Desktop/mobile browser checks use mocked external providers and simulated media completion. Live model quality, actual speech, mobile audio and assistive-technology review require owner testing. Client playback events do not verify attention, eye state or whether audio was heard.
 
-**Live verification still requires your credentials:** Supabase migration/Storage smoke test, actual model availability and safe generated content, native audio on iOS/Android with eyes-closed instructions, email provider delivery, Vercel protection, and investigator export permissions. Automated tests cannot verify a person's eye state, attention or whether they heard the audio. Client playback events are observations, not proof of exposure.
+## Privacy and versions
 
-See [deployment instructions](docs/DEPLOYMENT.md), [study and data protocol](docs/PROTOCOL.md), [API and export reference](docs/API.md), and [privacy/operations](docs/PRIVACY.md).
+Participant access uses private HTTP-only cookies and server ownership checks. Supabase tables deny direct anon/authenticated access; state/event changes commit atomically with version checks. Optional emails are encrypted and stored separately; investigator CSV exports exclude emails and credentials. The public access gate and Vercel login protection remain enabled.
 
-## Sources and model lifecycle
+Current session/round protocol: `physical-3x2-v1`; consent: `physical-consent-1`; content prompt: `physical-suggestions-1`; audio: `sentence-pauses-v3`. Start a **new session** to use the revised eligibility, measures and six-suggestion rounds. Older sessions, five-suggestion rounds, original allocations, texts, responses and audio remain unchanged; they cannot silently generate rounds under the new setup. Exports distinguish protocol and content/style fields, leaving legacy-only dimensions blank.
 
-Implementation follows the official [Next.js cookie reference](https://nextjs.org/docs/app/api-reference/functions/cookies), [Supabase RLS guidance](https://supabase.com/docs/guides/database/postgres/row-level-security), [database function permissions](https://supabase.com/docs/guides/database/functions), [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs) and [text-to-speech documentation](https://developers.openai.com/api/docs/guides/text-to-speech).
-
-Defaults are `gpt-4.1-mini` for suggestions and `gpt-4o-mini-tts` / `coral` for speech. Set model names explicitly for your approved pilot and record changes as protocol changes. **OpenAI currently documents the Speech API models as scheduled to shut down on 6 January 2027.** This implementation uses the currently supported Speech endpoint; replacing it with the recommended Realtime workflow is an API migration, not merely an environment-variable change. Complete that migration and verify exact spoken content before running this pilot after that date. The model and voice actually requested are stored per audio asset. Review current provider model lifecycle before enabling any deployment.
-
-Protocol update: new rounds use `eyes-closed-v1` and consent `pilot-consent-3`. Apply **both** SQL migrations in order, including `202611160001_wav_lead_in.sql`, to permit the WAV files. Existing MP3 files and earlier rounds are retained unchanged. Suggestion-type order is still randomised independently per round.
-
-Developed by **Dr Rod Rizzo — Pain Scientist — Centre for Pain IMPACT, Neuroscience Research Australia**.
-
-Suggestion wording update (`suggestions-2`): new suggestions exclude “try” and its inflections. Direct and permissive versions share exactly the same server-assembled instruction bodies and order; only “Now, …” versus “Invite yourself to …” differs. Begin a new session to test the revised content; existing research text/audio are retained unchanged.
-
-New audio uses `sentence-pauses-v1`: two-second inserted pauses between spoken sentences, matching boundaries for the direct/permissive pair, and the existing three-second lead-in. Cached audio is retained unchanged; prepare new suggestions to hear the updated pacing. No additional database migration is required.
+OpenAI currently documents retirement of the Speech API models on **6 January 2027**. This application uses the currently supported Speech endpoint; migration to the recommended replacement requires an audio-workflow change and verification, not just a model-name change. See [OpenAI speech documentation](https://developers.openai.com/api/docs/guides/text-to-speech). Existing defaults are `gpt-4.1-mini`, `gpt-4o-mini-tts`, and voice `coral`; keep model/voice settings fixed during an approved cohort.

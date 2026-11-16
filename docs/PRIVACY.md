@@ -41,3 +41,5 @@ For a serious incident, disable the pilot (`PILOT_ENABLED=false` and redeploy), 
 A server cannot establish eye closure or attention from browser events. Audio can be paused, sought, muted or inaccessible. The accessible transcript is available, but the current audio experiment requires a completed playback event to rate; a participant unable to listen should stop and contact the study team for an approved accessible protocol rather than fabricate exposure. Define these exclusions/accommodations in the approved protocol.
 
 Native controls, keyboard-operated labelled inputs, explicit scale anchors, non-preselected responses, visible focus, live errors, reduced-motion handling, and responsive layouts are provided. Real assistive-technology testing and real-device audio/content review remain required before recruitment.
+
+The current experience is restricted by self-report to adults with physical pain or uncomfortable physical sensations. Physical eligibility and its timestamp/version are stored with consent. Earlier broader-category records are retained with their original protocol; the update does not convert those into physical-symptom records.

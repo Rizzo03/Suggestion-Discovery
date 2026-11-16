@@ -82,7 +82,7 @@ describe('study protocol', () => {
     let s = fixture();
     for (let n = 1; n <= 30; n++) {
       s = round(s);
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < TYPES.length; i++) {
         const x = currentSuggestion(s)!;
         x.heardAt = at;
         s = respond(s, x.id, i % 2 ? null : i, at);
@@ -91,8 +91,8 @@ describe('study protocol', () => {
       expect(needsReassessment(s)).toBe(n % 3 === 0);
       if (n % 3 === 0) {
         expect(() => canGenerate(s)).toThrow(/check-in/);
-        expect(() => reassess(s, { Fear: 4 }, at)).toThrow();
-        s = reassess(s, { Fear: 4, Stress: 4 }, at);
+        expect(() => reassess(s, { 'Physical pain': 4 }, at)).toThrow();
+        s = reassess(s, { 'Physical pain': 4, 'Uncomfortable physical sensation': 4 }, at);
         expect(needsReassessment(s)).toBe(false);
       }
       canGenerate(s);
@@ -110,18 +110,27 @@ describe('study protocol', () => {
     expect(() => respond(s, currentSuggestion(s)!.id, 0, at)).toThrow();
   });
   it('validates exact intensity keys and consent without default ratings', () => {
-    expect(() => exactRatings(['Fear', 'Stress'], { Fear: 0, Stress: 10 })).not.toThrow();
+    expect(() =>
+      exactRatings(['Physical pain', 'Uncomfortable physical sensation'], {
+        'Physical pain': 0,
+        'Uncomfortable physical sensation': 10,
+      }),
+    ).not.toThrow();
     for (const r of [
-      { Fear: 2 },
-      { Fear: 11, Stress: 0 },
-      { Fear: 3, Stress: 0, Other: 1 },
+      { 'Physical pain': 2 },
+      { 'Physical pain': 11, 'Uncomfortable physical sensation': 0 },
+      { 'Physical pain': 3, 'Uncomfortable physical sensation': 0, Other: 1 },
     ] as Record<string, number>[])
-      expect(() => exactRatings(['Fear', 'Stress'], r)).toThrow();
-    expect(() => exactRatings(['Fear', 'Fear'], { Fear: 0 })).toThrow();
+      expect(() =>
+        exactRatings(['Physical pain', 'Uncomfortable physical sensation'], r),
+      ).toThrow();
+    expect(() =>
+      exactRatings(['Physical pain', 'Physical pain'], { 'Physical pain': 0 }),
+    ).toThrow();
     expect(
       baselineSchema.safeParse({
-        experiences: ['Fear'],
-        ratings: { Fear: 0 },
+        experiences: ['Physical pain'],
+        ratings: { 'Physical pain': 0 },
         consent: false,
         adult: true,
       }).success,
@@ -157,4 +166,40 @@ describe('CSV safety', () => {
     expect(data).toContain('"\'  @SUM(A1)"');
     expect(csv([])).toBe('');
   });
+});
+
+it('requires current physical symptoms, explicit eligibility and a positive baseline', () => {
+  const valid = {
+    experiences: ['Physical pain'],
+    ratings: { 'Physical pain': 3 },
+    consent: true,
+    adult: true,
+    physicalEligibility: true,
+  };
+  expect(baselineSchema.safeParse(valid).success).toBe(true);
+  expect(baselineSchema.safeParse({ ...valid, physicalEligibility: false }).success).toBe(false);
+  expect(baselineSchema.safeParse({ ...valid, physicalEligibility: undefined }).success).toBe(
+    false,
+  );
+  expect(
+    baselineSchema.safeParse({ ...valid, experiences: ['Anxiety'], ratings: { Anxiety: 5 } })
+      .success,
+  ).toBe(false);
+  expect(baselineSchema.safeParse({ ...valid, ratings: { 'Physical pain': 0 } }).success).toBe(
+    false,
+  );
+  expect(
+    baselineSchema.safeParse({
+      ...valid,
+      experiences: ['Physical pain', 'Uncomfortable physical sensation'],
+      ratings: { 'Physical pain': 0, 'Uncomfortable physical sensation': 2 },
+    }).success,
+  ).toBe(true);
+});
+it('retains legacy sessions without silently generating rounds under the new protocol', () => {
+  const s = fixture();
+  s.protocolVersion = 'eyes-closed-v1';
+  const before = structuredClone(s);
+  expect(() => canGenerate(s)).toThrow(/earlier protocol/);
+  expect(s).toEqual(before);
 });

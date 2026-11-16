@@ -1,49 +1,65 @@
 import { z } from 'zod';
-export const EXPERIENCES = [
-  'Physical pain',
-  'Fear',
-  'Uncertainty',
-  'Anxiety',
-  'Frustration',
-  'Sadness',
-  'Stress',
-  'Discomfort',
-  'Feeling overwhelmed',
-  'Lack of confidence',
-  'Other',
+export const EXPERIENCES = ['Physical pain', 'Uncomfortable physical sensation'] as const;
+export const CONTENT_CATEGORIES = [
+  'external_attention',
+  'imagery',
+  'metaphorical_reframing',
 ] as const;
-export const TYPES = ['metaphor', 'permissive', 'direct', 'imagery', 'attentional_shift'] as const;
-export const CONSENT_VERSION = 'pilot-consent-3';
-export const PROMPT_VERSION = 'suggestions-2';
+export type ContentCategory = (typeof CONTENT_CATEGORIES)[number];
+export type DeliveryStyle = 'direct' | 'permissive';
+export const TYPES = [
+  'external_attention_direct',
+  'external_attention_permissive',
+  'imagery_direct',
+  'imagery_permissive',
+  'metaphorical_reframing_direct',
+  'metaphorical_reframing_permissive',
+] as const;
+export const STUDY_PROTOCOL_VERSION = 'physical-3x2-v1';
+export const CONSENT_VERSION = 'physical-consent-1';
+export const PROMPT_VERSION = 'physical-suggestions-1';
 export const VOICE_INSTRUCTIONS =
   'Speak in a calm, neutral, warm tone at a steady, unhurried pace. Use natural pauses. No theatrical emphasis, persuasion, whispering, or music.';
 export const USEFULNESS_QUESTION =
-  'How useful was this suggestion in helping you respond to the challenging experience you selected?';
+  'How useful was this suggestion in helping you respond to your selected physical pain or uncomfortable physical sensation?';
 export const USEFULNESS_HELP =
   'Usefulness may involve understanding, approaching, managing or relating differently to an experience, without necessarily reducing its intensity.';
 export type Eye = 'open' | 'closed';
 export const intensitySchema = z.record(z.string(), z.number().int().min(0).max(10));
-export const baselineSchema = z.object({
-  experiences: z.array(z.enum(EXPERIENCES)).min(1).max(11),
-  ratings: intensitySchema,
-  consent: z.literal(true),
-  adult: z.literal(true),
-});
+export const baselineSchema = z
+  .object({
+    experiences: z.array(z.enum(EXPERIENCES)).min(1).max(2),
+    ratings: intensitySchema,
+    consent: z.literal(true),
+    adult: z.literal(true),
+    physicalEligibility: z.literal(true),
+  })
+  .superRefine((value, ctx) => {
+    if (!value.experiences.some((e) => (value.ratings[e] ?? 0) > 0))
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          'At least one selected physical symptom must currently have an intensity above zero.',
+      });
+  });
 export const generatedSchema = z
   .object({
     suggestions: z
       .array(z.object({ type: z.enum(TYPES), text: z.string().min(60).max(1800) }))
-      .length(5),
+      .length(TYPES.length),
   })
   .superRefine((v, ctx) => {
-    if (new Set(v.suggestions.map((s) => s.type)).size !== 5)
-      ctx.addIssue({ code: 'custom', message: 'All five distinct types are required.' });
-    if (new Set(v.suggestions.map((s) => s.text.trim().toLowerCase())).size !== 5)
+    if (new Set(v.suggestions.map((s) => s.type)).size !== TYPES.length)
+      ctx.addIssue({ code: 'custom', message: 'All six content/style combinations are required.' });
+    if (new Set(v.suggestions.map((s) => s.text.trim().toLowerCase())).size !== TYPES.length)
       ctx.addIssue({ code: 'custom', message: 'Suggestion texts must differ.' });
   });
 export type Suggestion = {
   id: string;
-  type: (typeof TYPES)[number];
+  type:
+    (typeof TYPES)[number] | 'metaphor' | 'permissive' | 'direct' | 'imagery' | 'attentional_shift';
+  contentCategory?: ContentCategory;
+  deliveryStyle?: DeliveryStyle;
   text: string;
   position: number;
   audioPath?: string;
@@ -64,6 +80,7 @@ export type Suggestion = {
 };
 export type Round = {
   pairedInstructionBodies?: string[];
+  instructionPairs?: Record<ContentCategory, string[]>;
   protocolVersion?: string;
   id: string;
   number: number;
@@ -79,6 +96,7 @@ export type Round = {
   suggestions: Suggestion[];
 };
 export type Study = {
+  eligibility?: { physicalSymptomsConfirmed: boolean; adult: boolean; at: string; version: string };
   protocolVersion?: string;
   experiences: string[];
   consentVersion: string;
@@ -128,6 +146,10 @@ export function assertActive(s: Study) {
 }
 export function canGenerate(s: Study) {
   assertActive(s);
+  if (s.protocolVersion !== STUDY_PROTOCOL_VERSION)
+    throw new StudyError(
+      'This session uses the earlier protocol. End it and begin a new session for the physical-symptom listening experience.',
+    );
   if (currentSuggestion(s)) throw new StudyError('Finish the current round first.');
   if (needsReassessment(s))
     throw new StudyError('Complete your intensity check-in before continuing.');

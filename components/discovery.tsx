@@ -5,6 +5,7 @@ import {
   EXPERIENCES,
   needsReassessment,
   Study,
+  STUDY_PROTOCOL_VERSION,
   USEFULNESS_HELP,
   USEFULNESS_QUESTION,
 } from '@/lib/study';
@@ -100,9 +101,15 @@ function IntensityForm({
     >
       <h2>{repeated ? 'A moment to check in' : 'How are things right now?'}</h2>
       <p>
-        Rate the current intensity of every selected experience from 0 to 10. There is no expected
-        change.
+        Rate the current intensity of every selected physical symptom from 0 to 10. There is no
+        expected change.
       </p>
+      {!repeated && (
+        <p className="fine">
+          To begin, at least one selected symptom must currently have an intensity above zero. Later
+          check-ins may be zero.
+        </p>
+      )}
       {experiences.map((e) => (
         <Scale
           key={e}
@@ -111,7 +118,13 @@ function IntensityForm({
           onChange={(v) => setRatings({ ...ratings, [e]: v! })}
         />
       ))}
-      <button disabled={busy || experiences.some((e) => ratings[e] === undefined)}>
+      <button
+        disabled={
+          busy ||
+          experiences.some((e) => ratings[e] === undefined) ||
+          (!repeated && !experiences.some((e) => (ratings[e] ?? 0) > 0))
+        }
+      >
         {busy ? 'Saving…' : repeated ? 'Save check-in' : 'Begin session'}
       </button>
     </form>
@@ -130,6 +143,7 @@ export function Discovery() {
   const [setup, setSetup] = useState<'consent' | 'experiences' | 'intensity'>('consent');
   const [consent, setConsent] = useState(false);
   const [adult, setAdult] = useState(false);
+  const [physicalEligibility, setPhysicalEligibility] = useState(false);
   const [challenge, setChallenge] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailCancelled, setEmailCancelled] = useState(false);
@@ -198,6 +212,7 @@ export function Discovery() {
     setSetup('consent');
     setConsent(false);
     setAdult(false);
+    setPhysicalEligibility(false);
     setSelection([]);
     setEmailSent(false);
     setEmailCancelled(false);
@@ -437,17 +452,24 @@ export function Discovery() {
                   <div className="eyebrow">BEFORE YOU BEGIN</div>
                   <h2>Your choice, at every step.</h2>
                   <p>
-                    You’ll choose current challenging experiences, rate their intensity, then listen
-                    to five AI-generated suggestions in each round. After each, tell us how useful
-                    it was. You can continue for as many rounds as you wish.
+                    This experience is for adults who currently have physical pain or an
+                    uncomfortable physical sensation. Select the physical symptom or symptoms
+                    present now and rate their intensity. Each round has six AI-generated
+                    suggestions: external attention, imagery and metaphorical reframing, each in
+                    direct and permissive wording. Matched versions use the same instructions and
+                    may feel similar. Their order is randomised, with matched versions kept apart.
+                    Rate usefulness after each one. After three complete rounds (18 suggestions),
+                    rate intensity again. There is no expected improvement, and you can stop
+                    whenever you wish.
                   </p>
                   <div className="info" aria-label="How your data is used">
                     <strong>Your responses will be used for research.</strong>
                     <p>
-                      We study how people respond to different spoken suggestions. We record your
-                      selected experiences, intensity and usefulness ratings, suggestions, listening
-                      events and session details under a random participant ID. Your name and email
-                      address are not required to take part.
+                      We explore how adults with current physical pain or uncomfortable physical
+                      sensations respond to different spoken suggestions. We record your selected
+                      experiences, intensity and usefulness ratings, suggestions, listening events
+                      and session details under a random participant ID. Your name and email address
+                      are not required to take part.
                     </p>
                     <p>
                       These are coded research data: the ID links your sessions, so we do not
@@ -489,8 +511,7 @@ export function Discovery() {
                     <p>
                       Selected experience labels go to OpenAI to generate suggestions. Suggestion
                       text goes to OpenAI for AI-generated speech. Data and audio are stored with
-                      Supabase and served via Vercel. Avoid entering identifying details; “Other”
-                      needs no description.
+                      Supabase and served via Vercel. Please do not enter identifying details.
                     </p>
                     <p>
                       Research data can be exported by authorised investigators. Device sign-in uses
@@ -518,6 +539,19 @@ export function Discovery() {
                   <label className="check">
                     <input
                       type="checkbox"
+                      checked={physicalEligibility}
+                      onChange={(e) => setPhysicalEligibility(e.target.checked)}
+                    />
+                    I currently have physical pain or an uncomfortable physical sensation.
+                  </label>
+                  <p className="fine">
+                    If neither is present, this experience is not suitable for you right now. This
+                    tool cannot tell you whether a symptom is safe or needs care. Seek appropriate
+                    medical advice if you are concerned about a symptom.
+                  </p>
+                  <label className="check">
+                    <input
+                      type="checkbox"
                       checked={consent}
                       onChange={(e) => setConsent(e.target.checked)}
                     />
@@ -526,7 +560,7 @@ export function Discovery() {
                     is optional and requires separate consent.
                   </label>
                   <button
-                    disabled={!consent || !adult || busy}
+                    disabled={!consent || !adult || !physicalEligibility || busy}
                     onClick={() => setSetup('experiences')}
                   >
                     Choose what to explore<span aria-hidden="true">→</span>
@@ -536,13 +570,13 @@ export function Discovery() {
               ) : setup === 'experiences' ? (
                 <>
                   <div className="eyebrow">01 / WHAT’S PRESENT</div>
-                  <h2>What feels challenging today?</h2>
+                  <h2>Which physical symptoms are present now?</h2>
                   <p>
-                    Select one or more experiences you would like to explore. Choose only what feels
-                    relevant right now.
+                    Select physical pain, an uncomfortable physical sensation, or both. This
+                    experience is focused on physical symptoms, rather than emotions alone.
                   </p>
                   <fieldset className="experience-grid">
-                    <legend className="sr-only">Current challenging experiences</legend>
+                    <legend className="sr-only">Current physical symptoms</legend>
                     {EXPERIENCES.map((e) => (
                       <label
                         className={selection.includes(e) ? 'experience selected' : 'experience'}
@@ -565,7 +599,7 @@ export function Discovery() {
                     ))}
                   </fieldset>
                   <p className="fine">
-                    Other does not require a description. Please do not share personal or
+                    No description or diagnosis is needed. Please do not share personal or
                     identifying details.
                   </p>
                   <button disabled={!selection.length} onClick={() => setSetup('intensity')}>
@@ -591,6 +625,7 @@ export function Discovery() {
                             ratings,
                             consent,
                             adult,
+                            physicalEligibility,
                           }),
                         );
                       })
@@ -616,7 +651,16 @@ export function Discovery() {
                 </span>
               </div>
               <section className="card">
-                {current ? (
+                {state.protocolVersion !== STUDY_PROTOCOL_VERSION ? (
+                  <>
+                    <h2>A new physical-symptom experience is available.</h2>
+                    <p>
+                      This saved session uses the earlier setup. End this session below, then begin
+                      a new one to review eligibility and consent for the six-suggestion rounds.
+                      Your saved responses will be retained.
+                    </p>
+                  </>
+                ) : current ? (
                   <Listening
                     key={current.id}
                     session={s}
@@ -626,7 +670,13 @@ export function Discovery() {
                   />
                 ) : needsReassessment(state) ? (
                   <>
-                    <div className="eyebrow">AFTER {completed * 5} SUGGESTIONS</div>
+                    <div className="eyebrow">
+                      AFTER{' '}
+                      {state.rounds
+                        .filter((r) => r.completedAt)
+                        .reduce((n, r) => n + r.suggestions.length, 0)}{' '}
+                      SUGGESTIONS
+                    </div>
                     <IntensityForm
                       key={completed}
                       repeated
@@ -643,9 +693,10 @@ export function Discovery() {
                     </h2>
                     <EyeInstruction eye="closed" delayed />
                     <p>
-                      Five suggestions, presented one at a time in a random order. You choose when
-                      each starts. After each recording, provide a usefulness response before
-                      continuing.
+                      Six suggestions: three content categories, each in direct and permissive
+                      wording, presented one at a time in random order with matching versions kept
+                      apart. You choose when each starts. After each recording, provide a usefulness
+                      response before continuing.
                     </p>
                     <label className="check optional">
                       <input
@@ -667,7 +718,7 @@ export function Discovery() {
                       </p>
                     )}
                     <button disabled={busy} onClick={() => void run(() => action('round'))}>
-                      {busy ? 'Preparing five suggestions…' : 'Prepare this round'}
+                      {busy ? 'Preparing six suggestions…' : 'Prepare this round'}
                       <span aria-hidden="true">→</span>
                     </button>
                     <p className="fine">
@@ -888,10 +939,11 @@ function Listening({
   return (
     <>
       <div className="eyebrow">
-        ROUND {round.number} <span className="dot">·</span> SUGGESTION {x.position} OF 5
+        ROUND {round.number} <span className="dot">·</span> SUGGESTION {x.position} OF{' '}
+        {round.suggestions.length}
       </div>
-      <div className="steps" aria-label={`Suggestion ${x.position} of 5`}>
-        {[1, 2, 3, 4, 5].map((n) => (
+      <div className="steps" aria-label={`Suggestion ${x.position} of ${round.suggestions.length}`}>
+        {Array.from({ length: round.suggestions.length }, (_, i) => i + 1).map((n) => (
           <span key={n} className={n < x.position ? 'done' : n === x.position ? 'current' : ''} />
         ))}
       </div>
@@ -900,7 +952,7 @@ function Listening({
         eye={round.eye}
         delayed={
           x.audioLeadInSeconds !== undefined ||
-          (!x.audioPath && round.protocolVersion === 'eyes-closed-v1')
+          (!x.audioPath && round.protocolVersion === STUDY_PROTOCOL_VERSION)
         }
       />
       <div className="audio-player">

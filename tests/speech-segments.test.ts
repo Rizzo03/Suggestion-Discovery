@@ -16,13 +16,16 @@ it('uses identical pause boundaries for matched direct and permissive instructio
     'notice a sound in the room around you',
   ];
   const result = assembleSuggestions({
-    pairedInstructions: bodies,
-    metaphor: 'An ordinary comparison with room for your experience. '.repeat(2),
-    imagery: 'Imagine a quiet place with room to notice your experience. '.repeat(2),
-    attentional_shift: 'Notice one sound nearby and then a sound farther away. '.repeat(2),
+    external_attention: bodies,
+    imagery: bodies.map((x) => 'imagine how you might ' + x),
+    metaphorical_reframing: bodies.map((x) => 'picture a comparison and ' + x),
   });
-  const direct = speechSegments(result.suggestions.find((s) => s.type === 'direct')!.text);
-  const permissive = speechSegments(result.suggestions.find((s) => s.type === 'permissive')!.text);
+  const direct = speechSegments(
+    result.suggestions.find((s) => s.type === 'external_attention_direct')!.text,
+  );
+  const permissive = speechSegments(
+    result.suggestions.find((s) => s.type === 'external_attention_permissive')!.text,
+  );
   expect(direct).toHaveLength(bodies.length);
   expect(permissive).toHaveLength(bodies.length);
   direct.forEach((s, i) =>

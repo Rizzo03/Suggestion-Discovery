@@ -94,6 +94,8 @@ beforeEach(() => {
   mock.generate.mockReset().mockResolvedValue({
     suggestions: TYPES.map((type, i) => ({
       type,
+      contentCategory: type.replace(/_(direct|permissive)$/, ''),
+      deliveryStyle: type.endsWith('_direct') ? 'direct' : 'permissive',
       text: `Suggestion ${i} ` + 'gentle wording '.repeat(6),
     })),
     model: 'text-test',
@@ -103,15 +105,15 @@ beforeEach(() => {
   process.env.RESEARCH_EXPORT_TOKEN = 'a'.repeat(40);
 });
 describe('server route protocol with mocked external providers', () => {
-  it('runs 15 suggestions, blocks skipped responses/check-ins, keeps eyes closed, then stops safely', async () => {
+  it('runs 18 suggestions, blocks skipped responses/check-ins, keeps eyes closed, then stops safely', async () => {
     for (let r = 0; r < 3; r++) {
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(200);
       const round = mock.session!.state.rounds.at(-1)!;
       expect(round.eye).toBe('closed');
-      expect(round.protocolVersion).toBe('eyes-closed-v1');
+      expect(round.protocolVersion).toBe('physical-3x2-v1');
       expect(new Set(round.order)).toEqual(new Set(TYPES));
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(409);
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < TYPES.length; i++) {
         const x = round.suggestions[i];
         const base = `sessions/${sid}/suggestions/${x.id}`;
         expect((await request(`${base}/response`, { value: 0 })).status).toBe(409);
@@ -143,14 +145,20 @@ describe('server route protocol with mocked external providers', () => {
       }
     }
     expect((await request(`sessions/${sid}/round`, {})).status).toBe(409);
-    expect((await request(`sessions/${sid}/intensity`, { ratings: { Fear: 0 } })).status).toBe(400);
     expect(
-      (await request(`sessions/${sid}/intensity`, { ratings: { Fear: 0, Stress: 0 } })).status,
+      (await request(`sessions/${sid}/intensity`, { ratings: { 'Physical pain': 0 } })).status,
+    ).toBe(400);
+    expect(
+      (
+        await request(`sessions/${sid}/intensity`, {
+          ratings: { 'Physical pain': 0, 'Uncomfortable physical sensation': 0 },
+        })
+      ).status,
     ).toBe(200);
     expect((await request(`sessions/${sid}/round`, {})).status).toBe(200);
     expect((await request(`sessions/${sid}/stop`, {})).status).toBe(200);
     expect((await request(`sessions/${sid}/round`, {})).status).toBe(409);
-    expect(mock.events.filter((e) => e === 'usefulness_response')).toHaveLength(15);
+    expect(mock.events.filter((e) => e === 'usefulness_response')).toHaveLength(18);
     expect(mock.session!.state.rounds[0].suggestions[0].audioSha256).toMatch(/^[0-9a-f]{64}$/);
     expect(mock.session!.state.rounds[0].prompt).toBe('exact prompt');
   });
