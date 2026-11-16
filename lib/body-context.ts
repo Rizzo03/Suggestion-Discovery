@@ -18,6 +18,40 @@ export const BODY_LOCATIONS = [
   'Several body areas',
   'Another body area',
 ] as const;
+export const EXCLUSIVE_SENSATIONS = ['Hard to describe', 'Prefer not to say'] as const;
+export const ASSOCIATED_SENSATIONS = [
+  'Aching',
+  'Sharp or stabbing',
+  'Burning',
+  'Throbbing or pulsing',
+  'Pressure or squeezing',
+  'Tightness',
+  'Pulling or stretching',
+  'Cramping',
+  'Tingling or pins and needles',
+  'Numbness',
+  'Itching',
+  'Heaviness',
+  'Tenderness or soreness',
+  'Shooting',
+  'Another sensation',
+  'Hard to describe',
+  'Prefer not to say',
+] as const;
+export const sensationsSchema = z
+  .array(z.enum(ASSOCIATED_SENSATIONS))
+  .max(ASSOCIATED_SENSATIONS.length)
+  .superRefine((values, ctx) => {
+    if (
+      new Set(values).size !== values.length ||
+      (values.some((x) => (EXCLUSIVE_SENSATIONS as readonly string[]).includes(x)) &&
+        values.length > 1)
+    )
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Choose sensation qualities or one exclusive alternative.',
+      });
+  });
 export const SYMPTOM_DURATIONS = ['Less than 3 months', '3 months or longer'] as const;
 export const EXCLUSIVE_FEELINGS = [
   'None of these',
@@ -55,6 +89,7 @@ export const feelingsSchema = z
 export const bodyContextSchema = z.object({
   primaryLocation: z.enum(BODY_LOCATIONS),
   associatedFeelings: feelingsSchema,
+  associatedSensations: sensationsSchema.optional(),
   symptomDuration: z.enum(SYMPTOM_DURATIONS).optional(),
 });
 export type BodyContext = z.infer<typeof bodyContextSchema>;

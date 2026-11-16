@@ -175,6 +175,7 @@ it('requires current physical symptoms, explicit eligibility and a positive base
     consent: true,
     adult: true,
     physicalEligibility: true,
+    associatedSensations: ['Aching'],
     primaryLocation: 'Lower back',
     symptomDuration: '3 months or longer',
     associatedFeelings: ['Not aware of feelings'],

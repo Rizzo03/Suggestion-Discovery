@@ -111,7 +111,11 @@ describe('server route protocol with mocked external providers', () => {
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(200);
       const round = mock.session!.state.rounds.at(-1)!;
       expect(round.eye).toBe('closed');
-      expect(round.protocolVersion).toBe('physical-targets-2x3-v3');
+      expect(mock.generate).toHaveBeenCalledWith(
+        mock.session!.state.experiences,
+        expect.objectContaining({ associatedSensations: ['Aching', 'Tightness'] }),
+      );
+      expect(round.protocolVersion).toBe('physical-targets-2x3-v4');
       expect(new Set(round.order)).toEqual(new Set(TYPES));
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(409);
       for (let i = 0; i < TYPES.length; i++) {

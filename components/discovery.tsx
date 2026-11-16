@@ -4,6 +4,8 @@ import {
   ASSOCIATED_FEELINGS,
   SYMPTOM_DURATIONS,
   EXCLUSIVE_FEELINGS,
+  ASSOCIATED_SENSATIONS,
+  EXCLUSIVE_SENSATIONS,
 } from '@/lib/body-context';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -148,6 +150,7 @@ export function Discovery() {
   const [selection, setSelection] = useState<string[]>([]);
   const [primaryLocation, setPrimaryLocation] = useState('');
   const [symptomDuration, setSymptomDuration] = useState('');
+  const [associatedSensations, setAssociatedSensations] = useState<string[]>([]);
   const [associatedFeelings, setAssociatedFeelings] = useState<string[]>([]);
   const [setup, setSetup] = useState<'consent' | 'experiences' | 'intensity'>('consent');
   const [consent, setConsent] = useState(false);
@@ -226,6 +229,7 @@ export function Discovery() {
     setPrimaryLocation('');
     setSymptomDuration('');
     setAssociatedFeelings([]);
+    setAssociatedSensations([]);
     setEmailSent(false);
     setEmailCancelled(false);
   }
@@ -266,9 +270,9 @@ export function Discovery() {
           </h1>
           <p className="intro-copy">
             For adults with physical pain or an uncomfortable area of the body. Choose the body area
-            duration, and a response about associated feelings. Listen to suggestions about the
-            sensations themselves and your emotional response, then tell us how much each one
-            resonates with your current experience.
+            duration, sensation qualities and a response about associated feelings. Listen to
+            suggestions about the sensations themselves and your emotional response, then tell us
+            how much each one resonates with your current experience.
           </p>
           <div className="orbit" aria-hidden="true">
             <div />
@@ -471,7 +475,10 @@ export function Discovery() {
                   </p>
                   <ol className="participant-guide" aria-label="How to proceed">
                     <li>Read the information and consent.</li>
-                    <li>Select your symptoms, body area, duration and feelings response.</li>
+                    <li>
+                      Select your symptoms, body area, duration, sensation qualities and feelings
+                      response.
+                    </li>
                     <li>Rate the current intensity of each selected symptom.</li>
                     <li>Prepare a round of six suggestions.</li>
                     <li>Prepare each audio, press Play, then close your eyes while listening.</li>
@@ -487,23 +494,23 @@ export function Discovery() {
                   <p>
                     This experience is for adults who currently have physical pain or an
                     uncomfortable area of the body. Choose your symptom type and its main body
-                    location and symptom duration, and select a response about associated feelings.
-                    Each round has six personalised recordings: two targets—sensory qualities and
-                    emotional/motivational response—each delivered in Direct, Imagery (“Imagine…”)
-                    and Metaphorical form. The order is randomised, alternating targets. Rate
-                    resonance after each recording. After three complete rounds (18 suggestions),
-                    rate intensity again. No improvement is expected, and you can stop whenever you
-                    wish.
+                    location and symptom duration, and select sensation qualities and a response
+                    about associated feelings. Each round has six personalised recordings: two
+                    targets—sensory qualities and emotional/motivational response—each delivered in
+                    Direct, Imagery (“Imagine…”) and Metaphorical form. The order is randomised,
+                    alternating targets. Rate resonance after each recording. After three complete
+                    rounds (18 suggestions), rate intensity again. No improvement is expected, and
+                    you can stop whenever you wish.
                   </p>
                   <div className="info" aria-label="How your data is used">
                     <strong>Your responses will be used for research.</strong>
                     <p>
                       We explore how adults with current physical pain or uncomfortable physical
                       sensations respond to different spoken suggestions. We record your selected
-                      symptom types, body location and symptom duration, associated-feelings
-                      responses, intensity and resonance ratings, suggestions, listening events and
-                      session details under a random participant ID. Your name and email address are
-                      not required to take part.
+                      symptom types, body location and symptom duration, sensation qualities,
+                      associated-feelings responses, intensity and resonance ratings, suggestions,
+                      listening events and session details under a random participant ID. Your name
+                      and email address are not required to take part.
                     </p>
                     <p>
                       These are coded research data: the ID links your sessions, so we do not
@@ -538,16 +545,17 @@ export function Discovery() {
                     </p>
                     <p>
                       We record your participant ID, sessions, selected symptoms, body location and
-                      symptom duration, associated-feelings responses, intensity ratings, exact
-                      suggestions, AI metadata, randomisation, eye conditions, audio playback
-                      events, resonance responses, and timestamps. The proposed resonance question
-                      is exploratory and has not been described as a validated measure.
+                      symptom duration, sensation qualities, associated-feelings responses,
+                      intensity ratings, exact suggestions, AI metadata, randomisation, eye
+                      conditions, audio playback events, resonance responses, and timestamps. The
+                      proposed resonance question is exploratory and has not been described as a
+                      validated measure.
                     </p>
                     <p>
-                      Selected symptom types, body location, symptom duration and any disclosed
-                      feelings go to OpenAI to personalise suggestions. Suggestion text goes to
-                      OpenAI for AI-generated speech. Data and audio are stored with Supabase and
-                      served via Vercel. Please do not enter identifying details.
+                      Selected symptom types, body location, symptom duration, sensation qualities
+                      and any disclosed feelings go to OpenAI to personalise suggestions. Suggestion
+                      text goes to OpenAI for AI-generated speech. Data and audio are stored with
+                      Supabase and served via Vercel. Please do not enter identifying details.
                     </p>
                     <p>
                       Research data can be exported by authorised investigators. Device sign-in uses
@@ -610,7 +618,8 @@ export function Discovery() {
                   <p>
                     Select physical pain, an uncomfortable physical sensation, or both. This
                     experience is focused on physical symptoms, rather than emotions alone. Complete
-                    the body-area, duration and feelings questions below, then select Continue.
+                    the body-area, duration, sensation qualities and feelings questions below, then
+                    select Continue.
                   </p>
                   <fieldset className="experience-grid">
                     <legend className="sr-only">Current physical symptoms</legend>
@@ -672,6 +681,46 @@ export function Discovery() {
                     </select>
                   </label>
                   <fieldset className="experience-grid">
+                    <legend>What does the pain or discomfort feel like?</legend>
+                    <p className="feelings-help">
+                      Think about the physical sensation in your selected body area right now.
+                      Select all qualities that fit. A response is required; you can choose “Hard to
+                      describe” or “Prefer not to say”. These descriptions are not a diagnosis.
+                    </p>
+                    {ASSOCIATED_SENSATIONS.map((sensation) => (
+                      <label
+                        key={sensation}
+                        className={
+                          associatedSensations.includes(sensation)
+                            ? 'experience selected'
+                            : 'experience'
+                        }
+                      >
+                        <input
+                          type="checkbox"
+                          checked={associatedSensations.includes(sensation)}
+                          onChange={(e) =>
+                            setAssociatedSensations((values) => {
+                              if (!e.target.checked) return values.filter((x) => x !== sensation);
+                              if ((EXCLUSIVE_SENSATIONS as readonly string[]).includes(sensation))
+                                return [sensation];
+                              return [
+                                ...values.filter(
+                                  (x) => !(EXCLUSIVE_SENSATIONS as readonly string[]).includes(x),
+                                ),
+                                sensation,
+                              ];
+                            })
+                          }
+                        />
+                        <span>{sensation}</span>
+                        <span aria-hidden="true">
+                          {associatedSensations.includes(sensation) ? '✓' : '+'}
+                        </span>
+                      </label>
+                    ))}
+                  </fieldset>
+                  <fieldset className="experience-grid">
                     <legend>Current associated feelings</legend>
                     <p className="feelings-help">
                       How are you feeling alongside the pain or discomfort right now? Select any
@@ -721,7 +770,8 @@ export function Discovery() {
                       !selection.length ||
                       !primaryLocation ||
                       !symptomDuration ||
-                      !associatedFeelings.length
+                      !associatedFeelings.length ||
+                      !associatedSensations.length
                     }
                     onClick={() => setSetup('intensity')}
                   >
@@ -751,6 +801,7 @@ export function Discovery() {
                             primaryLocation,
                             symptomDuration,
                             associatedFeelings,
+                            associatedSensations,
                           }),
                         );
                       })
@@ -781,8 +832,9 @@ export function Discovery() {
                     <h2>A new physical-symptom experience is available.</h2>
                     <p>
                       This saved session uses the earlier setup. End this session below, then begin
-                      a new one to select your body area and associated feelings and review consent
-                      for the revised six-suggestion rounds. Your saved responses will be retained.
+                      a new one to select your body area, sensation qualities and associated
+                      feelings and review consent for the revised six-suggestion rounds. Your saved
+                      responses will be retained.
                     </p>
                   </>
                 ) : current ? (
@@ -1079,6 +1131,11 @@ function Listening({
       <p>
         Choose Prepare audio if shown. When the controls appear, press Play, then close your eyes.
         Open your eyes when the recording ends to give your response in Step 6.
+      </p>
+      <p className="help">
+        Sensation qualities selected at the start:{' '}
+        {session.state.associatedSensations?.join(', ') || 'not recorded'}. These stay fixed for
+        this session.
       </p>
       <p className="help">
         Selected body area: <strong>{session.state.primaryLocation}</strong>. Feelings selected at

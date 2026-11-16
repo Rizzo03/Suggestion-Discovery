@@ -51,6 +51,7 @@ it('requires duration and a feelings response at session creation, with non-disc
     consent: true,
     adult: true,
     physicalEligibility: true,
+    associatedSensations: ['Aching'],
     primaryLocation: 'Lower back',
     symptomDuration: 'Less than 3 months',
     associatedFeelings: ['Not aware of feelings'],

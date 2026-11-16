@@ -44,6 +44,28 @@ test('consent, multiple experiences and explicit baseline ratings on small and l
     page.getByRole('checkbox', { name: 'Not aware of feelings', exact: true }),
   ).not.toBeChecked();
   await page.getByRole('checkbox', { name: 'Frustration', exact: true }).check();
+  await expect(page.getByRole('button', { name: 'Continue with 2 selections' })).toBeDisabled();
+  const sensations = page.getByRole('group', {
+    name: 'What does the pain or discomfort feel like?',
+    exact: true,
+  });
+  await sensations.getByRole('checkbox', { name: 'Hard to describe', exact: true }).check();
+  await sensations.getByRole('checkbox', { name: 'Aching', exact: true }).check();
+  await expect(
+    sensations.getByRole('checkbox', { name: 'Hard to describe', exact: true }),
+  ).not.toBeChecked();
+  await sensations.getByRole('checkbox', { name: 'Tightness', exact: true }).check();
+  expect(
+    await sensations.evaluate((el) => {
+      const groups = [...document.querySelectorAll('fieldset')];
+      const feelings = groups.find(
+        (g) => g.querySelector('legend')?.textContent === 'Current associated feelings',
+      );
+      return Boolean(
+        feelings && el.compareDocumentPosition(feelings) & Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+    }),
+  ).toBe(true);
   await page.getByRole('button', { name: 'Continue with 2 selections' }).click();
   await expect(page.getByRole('button', { name: 'Begin session', exact: true })).toBeDisabled();
   await page
@@ -67,6 +89,7 @@ test('consent, multiple experiences and explicit baseline ratings on small and l
     primaryLocation: 'Lower back',
     symptomDuration: '3 months or longer',
     associatedFeelings: ['Worry', 'Frustration'],
+    associatedSensations: ['Aching', 'Tightness'],
   });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
@@ -79,7 +102,7 @@ test('waits for listening completion, accepts zero and unable, requires explicit
   state.rounds = [
     {
       id: 'round1',
-      protocolVersion: 'physical-targets-2x3-v3',
+      protocolVersion: 'physical-targets-2x3-v4',
       number: 1,
       eye: 'closed',
       order: [...TYPES],

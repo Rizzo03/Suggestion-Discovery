@@ -14,6 +14,7 @@ export function sessionRows(sessions: Session[]) {
     primary_location: s.state.primaryLocation,
     symptom_duration: s.state.symptomDuration,
     associated_feelings: s.state.associatedFeelings,
+    associated_sensations: s.state.associatedSensations,
     assessment_construct: s.state.assessment?.construct ?? 'usefulness',
     assessment_version: s.state.assessment?.version,
     assessment_question: s.state.assessment?.question,

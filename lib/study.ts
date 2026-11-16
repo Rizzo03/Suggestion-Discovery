@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { BODY_LOCATIONS, SYMPTOM_DURATIONS, feelingsSchema, BodyContext } from './body-context';
+import {
+  BODY_LOCATIONS,
+  SYMPTOM_DURATIONS,
+  feelingsSchema,
+  sensationsSchema,
+  BodyContext,
+} from './body-context';
 export const EXPERIENCES = ['Physical pain', 'Other uncomfortable physical sensation'] as const;
 export const CONTENT_CATEGORIES = ['sensory_discriminative', 'affective_motivational'] as const;
 export type ContentCategory = (typeof CONTENT_CATEGORIES)[number];
@@ -13,9 +19,9 @@ export const TYPES = [
   'affective_motivational_imagery',
   'affective_motivational_metaphorical',
 ] as const;
-export const STUDY_PROTOCOL_VERSION = 'physical-targets-2x3-v3';
-export const CONSENT_VERSION = 'physical-context-consent-3';
-export const PROMPT_VERSION = 'physical-target-suggestions-4';
+export const STUDY_PROTOCOL_VERSION = 'physical-targets-2x3-v4';
+export const CONSENT_VERSION = 'physical-context-consent-4';
+export const PROMPT_VERSION = 'physical-target-suggestions-5';
 export const VOICE_INSTRUCTIONS =
   'Speak in a calm, neutral, warm tone at a steady, unhurried pace. Use natural pauses. No theatrical emphasis, persuasion, whispering, or music.';
 export const RESONANCE_QUESTION =
@@ -41,6 +47,9 @@ export const baselineSchema = z
     adult: z.literal(true),
     physicalEligibility: z.literal(true),
     primaryLocation: z.enum(BODY_LOCATIONS),
+    associatedSensations: sensationsSchema.refine((values) => values.length > 0, {
+      message: 'Select at least one sensation response.',
+    }),
     associatedFeelings: feelingsSchema.refine((values) => values.length > 0, {
       message: 'Select at least one feelings response.',
     }),
@@ -121,6 +130,7 @@ export type Study = {
   assessment?: Assessment;
   primaryLocation?: BodyContext['primaryLocation'];
   associatedFeelings?: string[];
+  associatedSensations?: string[];
   symptomDuration?: BodyContext['symptomDuration'];
   eligibility?: { physicalSymptomsConfirmed: boolean; adult: boolean; at: string; version: string };
   protocolVersion?: string;
