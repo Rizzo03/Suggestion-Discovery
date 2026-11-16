@@ -610,6 +610,7 @@ export function Discovery() {
                   <label className="field">
                     Main body area
                     <select
+                      aria-label="Main body area"
                       value={primaryLocation}
                       onChange={(e) => setPrimaryLocation(e.target.value)}
                       required
