@@ -1,4 +1,4 @@
-import { Study } from '../lib/study';
+import { Study, RESONANCE_ASSESSMENT } from '../lib/study';
 const at = '2026-11-15T10:00:00.000Z';
 export function fixture(): Study {
   return {
@@ -6,8 +6,9 @@ export function fixture(): Study {
     primaryLocation: 'Lower back',
     symptomDuration: '3 months or longer',
     associatedFeelings: ['Worry', 'Frustration'],
-    protocolVersion: 'physical-targets-2x3-v2',
-    consentVersion: 'physical-context-consent-2',
+    assessment: RESONANCE_ASSESSMENT,
+    protocolVersion: 'physical-targets-2x3-v3',
+    consentVersion: 'physical-context-consent-3',
     consentAt: at,
     baseline: { ratings: { 'Physical pain': 6, 'Other uncomfortable physical sensation': 4 }, at },
     reassessments: [],

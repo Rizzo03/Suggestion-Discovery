@@ -12,8 +12,8 @@ import {
   needsReassessment,
   Study,
   STUDY_PROTOCOL_VERSION,
-  USEFULNESS_HELP,
-  USEFULNESS_QUESTION,
+  RESONANCE_HELP,
+  RESONANCE_QUESTION,
 } from '@/lib/study';
 type PublicSession = { id: string; state: Study; created_at: string; feedbackStatus?: string };
 type Me = { participantId: string; recoveryEnabled: boolean; session: PublicSession | null };
@@ -69,8 +69,8 @@ function Scale({
         ))}
       </div>
       <div className="scale-anchors">
-        <span>{unable ? 'Not at all useful' : 'No intensity'}</span>
-        <span>{unable ? 'Extremely useful' : 'Extreme intensity'}</span>
+        <span>{unable ? '0 — Not at all' : 'No intensity'}</span>
+        <span>{unable ? '10 — Very much' : 'Extreme intensity'}</span>
       </div>
       {unable && (
         <label className="check unable">
@@ -108,7 +108,7 @@ function IntensityForm({
       <h2>{repeated ? 'A moment to check in' : 'How are things right now?'}</h2>
       <p>
         Rate the current intensity of every selected physical symptom from 0 to 10. There is no
-        expected change.
+        expected change. Select a number for each symptom, then save to continue.
       </p>
       {!repeated && (
         <p className="fine">
@@ -232,14 +232,14 @@ export function Discovery() {
   return (
     <div className="shell">
       <header>
-        <a className="brand" href="/" aria-label="Suggestion Discovery home">
+        <a className="brand" href="/" aria-label="Suggestion Discovery Lab home">
           <span className="brand-icon" aria-hidden="true">
             s<span>d</span>
           </span>
           <span>
             Suggestion
             <br />
-            Discovery
+            Discovery Lab
           </span>
         </a>
         <span className="pilot">
@@ -266,14 +266,15 @@ export function Discovery() {
           </h1>
           <p className="intro-copy">
             For adults with physical pain or an uncomfortable area of the body. Choose the body area
-            and, if you wish, associated feelings. Listen to suggestions about the sensations
-            themselves and your emotional response, then tell us how useful each one feels.
+            duration, and a response about associated feelings. Listen to suggestions about the
+            sensations themselves and your emotional response, then tell us how much each one
+            resonates with your current experience.
           </p>
           <div className="orbit" aria-hidden="true">
             <div />
             <div />
             <div />
-            <span>Listen. Rate usefulness. Reflect.</span>
+            <span>Listen. Rate resonance. Reflect.</span>
           </div>
           <p className="aside-note">
             No right response. No expected improvement.
@@ -462,8 +463,27 @@ export function Discovery() {
             <section className="card">
               {setup === 'consent' ? (
                 <>
-                  <div className="eyebrow">BEFORE YOU BEGIN</div>
+                  <div className="eyebrow">Step 1: Read the information and consent</div>
                   <h2>Your choice, at every step.</h2>
+                  <p>
+                    Read the information below. If you agree and meet the eligibility criteria,
+                    select the three confirmations, then choose “Choose what to explore”.
+                  </p>
+                  <ol className="participant-guide" aria-label="How to proceed">
+                    <li>Read the information and consent.</li>
+                    <li>Select your symptoms, body area, duration and feelings response.</li>
+                    <li>Rate the current intensity of each selected symptom.</li>
+                    <li>Prepare a round of six suggestions.</li>
+                    <li>Prepare each audio, press Play, then close your eyes while listening.</li>
+                    <li>
+                      Open your eyes, rate resonance and submit your response. Repeat for each
+                      suggestion.
+                    </li>
+                    <li>
+                      After three complete rounds, rate intensity again. Continue or stop whenever
+                      you choose.
+                    </li>
+                  </ol>
                   <p>
                     This experience is for adults who currently have physical pain or an
                     uncomfortable area of the body. Choose your symptom type and its main body
@@ -471,7 +491,7 @@ export function Discovery() {
                     Each round has six personalised recordings: two targets—sensory qualities and
                     emotional/motivational response—each delivered in Direct, Imagery (“Imagine…”)
                     and Metaphorical form. The order is randomised, alternating targets. Rate
-                    usefulness after each recording. After three complete rounds (18 suggestions),
+                    resonance after each recording. After three complete rounds (18 suggestions),
                     rate intensity again. No improvement is expected, and you can stop whenever you
                     wish.
                   </p>
@@ -481,7 +501,7 @@ export function Discovery() {
                       We explore how adults with current physical pain or uncomfortable physical
                       sensations respond to different spoken suggestions. We record your selected
                       symptom types, body location and symptom duration, associated-feelings
-                      responses, intensity and usefulness ratings, suggestions, listening events and
+                      responses, intensity and resonance ratings, suggestions, listening events and
                       session details under a random participant ID. Your name and email address are
                       not required to take part.
                     </p>
@@ -520,7 +540,7 @@ export function Discovery() {
                       We record your participant ID, sessions, selected symptoms, body location and
                       symptom duration, associated-feelings responses, intensity ratings, exact
                       suggestions, AI metadata, randomisation, eye conditions, audio playback
-                      events, usefulness responses, and timestamps. The proposed usefulness question
+                      events, resonance responses, and timestamps. The proposed resonance question
                       is exploratory and has not been described as a validated measure.
                     </p>
                     <p>
@@ -585,11 +605,12 @@ export function Discovery() {
                 </>
               ) : setup === 'experiences' ? (
                 <>
-                  <div className="eyebrow">01 / WHAT’S PRESENT</div>
+                  <div className="eyebrow">Step 2: Select your symptoms and body area</div>
                   <h2>Which physical symptoms are present now?</h2>
                   <p>
                     Select physical pain, an uncomfortable physical sensation, or both. This
-                    experience is focused on physical symptoms, rather than emotions alone.
+                    experience is focused on physical symptoms, rather than emotions alone. Complete
+                    the body-area, duration and feelings questions below, then select Continue.
                   </p>
                   <fieldset className="experience-grid">
                     <legend className="sr-only">Current physical symptoms</legend>
@@ -714,7 +735,7 @@ export function Discovery() {
                 </>
               ) : (
                 <>
-                  <div className="eyebrow">02 / YOUR STARTING POINT</div>
+                  <div className="eyebrow">Step 3: Rate your starting intensity</div>
                   <IntensityForm
                     experiences={selection}
                     busy={busy}
@@ -781,6 +802,7 @@ export function Discovery() {
                         .reduce((n, r) => n + r.suggestions.length, 0)}{' '}
                       SUGGESTIONS
                     </div>
+                    <div className="eyebrow">Step 7: Check your current intensity</div>
                     <IntensityForm
                       key={completed}
                       repeated
@@ -792,6 +814,7 @@ export function Discovery() {
                 ) : (
                   <>
                     <div className="eyebrow">ROUND {state.rounds.length + 1}</div>
+                    <div className="eyebrow">Step 4: Prepare your next round</div>
                     <h2>
                       {completed ? 'Ready for another perspective?' : 'Make yourself comfortable.'}
                     </h2>
@@ -800,7 +823,7 @@ export function Discovery() {
                       Six suggestions: sensory qualities and emotional/motivational response, each
                       in Direct, Imagery and Metaphorical form. Targets alternate in a randomised
                       order. Each suggestion refers to your selected body area. You choose when each
-                      starts. After each recording, provide a usefulness response before continuing.
+                      starts. After each recording, provide a resonance response before continuing.
                     </p>
                     <label className="check optional">
                       <input
@@ -935,7 +958,7 @@ function EyeInstruction({ eye, delayed = false }: { eye: 'open' | 'closed'; dela
         <p>
           {eye === 'closed'
             ? delayed
-              ? 'Take one gentle breath in and out, at your own pace. Press Play, then close your eyes. The audio will begin a few seconds after you press Play. When it finishes, open your eyes and rate how useful the suggestion was.'
+              ? 'Take one gentle breath in and out, at your own pace. Press Play, then close your eyes. The audio will begin a few seconds after you press Play. When it finishes, open your eyes and rate how much the suggestion resonated with your current experience.'
               : 'This saved round uses the earlier protocol. Close your eyes only while listening and open them immediately after the audio to give your rating.'
             : 'Keep your eyes open while listening. After each suggestion, give your rating.'}{' '}
           The next suggestion never starts automatically.
@@ -1051,7 +1074,12 @@ function Listening({
           <span key={n} className={n < x.position ? 'done' : n === x.position ? 'current' : ''} />
         ))}
       </div>
+      <div className="eyebrow">Step 5: Prepare and listen</div>
       <h2>Listen at your own pace.</h2>
+      <p>
+        Choose Prepare audio if shown. When the controls appear, press Play, then close your eyes.
+        Open your eyes when the recording ends to give your response in Step 6.
+      </p>
       <p className="help">
         Selected body area: <strong>{session.state.primaryLocation}</strong>. Feelings selected at
         the start:{' '}
@@ -1157,11 +1185,14 @@ function Listening({
           <p className="eyebrow">
             {round.eye === 'closed' ? 'OPEN YOUR EYES NOW · YOUR RESPONSE' : 'YOUR RESPONSE'}
           </p>
-          <Scale legend={USEFULNESS_QUESTION} value={value} onChange={setValue} unable />
-          <p className="help">{USEFULNESS_HELP}</p>
+          <div className="eyebrow">Step 6: Rate resonance and submit</div>
+          <Scale legend={RESONANCE_QUESTION} value={value} onChange={setValue} unable />
+          <p className="help">{RESONANCE_HELP}</p>
           <p className="fine">
             Think about: {session.state.experiences.join(', ')}. This is an exploratory question,
-            not a validated measure. Choose the response that fits; 0 is a valid response.
+            not a validated measure. Select 0–10 or Unable to rate, then choose Submit response.
+            Your next suggestion will become available; prepare and play it when you are ready.
+            There is no expected score.
           </p>
           <button disabled={busy || value === undefined}>
             {busy ? 'Saving…' : 'Submit response'}

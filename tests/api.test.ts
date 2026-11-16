@@ -111,7 +111,7 @@ describe('server route protocol with mocked external providers', () => {
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(200);
       const round = mock.session!.state.rounds.at(-1)!;
       expect(round.eye).toBe('closed');
-      expect(round.protocolVersion).toBe('physical-targets-2x3-v2');
+      expect(round.protocolVersion).toBe('physical-targets-2x3-v3');
       expect(new Set(round.order)).toEqual(new Set(TYPES));
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(409);
       for (let i = 0; i < TYPES.length; i++) {
@@ -159,7 +159,7 @@ describe('server route protocol with mocked external providers', () => {
     expect((await request(`sessions/${sid}/round`, {})).status).toBe(200);
     expect((await request(`sessions/${sid}/stop`, {})).status).toBe(200);
     expect((await request(`sessions/${sid}/round`, {})).status).toBe(409);
-    expect(mock.events.filter((e) => e === 'usefulness_response')).toHaveLength(18);
+    expect(mock.events.filter((e) => e === 'resonance_response')).toHaveLength(18);
     expect(mock.session!.state.rounds[0].suggestions[0].audioSha256).toMatch(/^[0-9a-f]{64}$/);
     expect(mock.session!.state.rounds[0].prompt).toBe('exact prompt');
   });

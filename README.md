@@ -1,4 +1,4 @@
-# Suggestion Discovery
+# Suggestion Discovery Lab
 
 An invitation-only, mobile-friendly listening platform for **adults currently experiencing physical pain or an uncomfortable physical sensation**. Next.js, TypeScript, Supabase and OpenAI; hosted as a protected Vercel technical pilot. Not treatment and not approved for public recruitment. No therapeutic efficacy or measure-validation claims.
 
@@ -10,7 +10,7 @@ Developed by **Dr Rod Rizzo — Pain Scientist — Centre for Pain IMPACT, Neuro
 2. Read the coded-data research information and separately confirm adult/private-invitation eligibility, current physical symptoms and research consent.
 3. Select **Physical pain**, **Other uncomfortable physical sensation**, or both; rate each on 0–10. At least one selected symptom must have a baseline intensity above zero. Subsequent measurements may be zero.
 4. Listen with eyes closed to **six suggestions per round**: two targets × three delivery forms.
-5. After each recording, open eyes and submit a required 0–10 usefulness response or Unable to rate before the next suggestion becomes available.
+5. After each recording, open eyes and submit a required 0–10 resonance response or Unable to rate before the next suggestion becomes available.
 6. Reassess every selected physical symptom after three complete rounds (**18 suggestions**), before continuing. Stop at any point or continue without a round-count ceiling.
 7. Optionally request one separately consented feedback email after ending a session.
 
@@ -47,10 +47,12 @@ Core tests cover eligibility/baseline validation, six-condition assembly, prohib
 
 Participant access uses private HTTP-only cookies and server ownership checks. Supabase tables deny direct anon/authenticated access; state/event changes commit atomically with version checks. Optional emails are encrypted and stored separately; investigator CSV exports exclude emails and credentials. The public access gate and Vercel login protection remain enabled.
 
-Current session/round protocol: `physical-targets-2x3-v2`; consent: `physical-context-consent-2`; content prompt: `physical-target-suggestions-3`; audio: `sentence-pauses-v3`. Start a **new session** to use the revised eligibility, measures and six-suggestion rounds. Older sessions, five-suggestion rounds, original allocations, texts, responses and audio remain unchanged; they cannot silently generate rounds under the new setup. Exports distinguish protocol and content/style fields, leaving legacy-only dimensions blank.
+Current session/round protocol: `physical-targets-2x3-v3`; consent: `physical-context-consent-3`; content prompt: `physical-target-suggestions-3`; audio: `sentence-pauses-v3`. Start a **new session** to use the revised eligibility, measures and six-suggestion rounds. Older sessions, five-suggestion rounds, original allocations, texts, responses and audio remain unchanged; they cannot silently generate rounds under the new setup. Exports distinguish protocol and content/style fields, leaving legacy-only dimensions blank.
 
 OpenAI currently documents retirement of the Speech API models on **6 January 2027**. This application uses the currently supported Speech endpoint; migration to the recommended replacement requires an audio-workflow change and verification, not just a model-name change. See [OpenAI speech documentation](https://developers.openai.com/api/docs/guides/text-to-speech). Existing defaults are `gpt-4.1-mini`, `gpt-4o-mini-tts`, and voice `coral`; keep model/voice settings fixed during an approved cohort.
 
 Revision v2 requires duration in the selected body area (Less than 3 months / 3 months or longer) and at least one feelings response, including Not aware of feelings. Consent explains duration collection and OpenAI processing; CSV retains `symptom_duration`. Start a new session; older records remain unchanged. Invalid/truncated model output receives at most one corrective regeneration within bounded provider timeouts; refusal and moderation rejection still fail closed. No database migration is required.
 
 Imagery asks participants to imagine the literal target experience: physical sensory qualities for sensory/discriminative, or an emotional/motivational response for affective/motivational. Metaphors, similes and symbolic substitutions are prohibited in imagery and reserved for Metaphorical. Explicit comparison markers are rejected and trigger the bounded corrective retry. This text screen cannot guarantee semantic separation; human content review remains necessary. Existing text/audio are retained; newly generated rounds use prompt version `physical-target-suggestions-3`.
+
+Resonance revision: participant guidance uses Step 1 through Step 7, with listening/rating repeated for each suggestion. New sessions store `assessment` version `resonance-1`, exact question, explanation, anchors and Unable-to-rate option. Response events use `resonance_response`. Exports add construct/version/question/anchors, `response_value` and `resonance`; the existing `usefulness` column is retained only for historical usefulness records. Earlier sessions, responses and events are not relabelled or rewritten. Start a new session to use resonance; no database migration or credentials are needed.

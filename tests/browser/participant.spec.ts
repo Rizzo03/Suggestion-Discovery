@@ -19,6 +19,11 @@ test('consent, multiple experiences and explicit baseline ratings on small and l
     return route.fulfill({ json: { ok: true } });
   });
   await page.goto('/');
+  await expect(page).toHaveTitle(/Suggestion Discovery Lab/);
+  await expect(
+    page.getByText('Step 1: Read the information and consent', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('list', { name: 'How to proceed' })).toBeVisible();
   await expect(page.getByText('Your choice, at every step.')).toBeVisible();
   const next = page.getByRole('button', { name: 'Choose what to explore' });
   await expect(next).toBeDisabled();
@@ -74,7 +79,7 @@ test('waits for listening completion, accepts zero and unable, requires explicit
   state.rounds = [
     {
       id: 'round1',
-      protocolVersion: 'physical-targets-2x3-v2',
+      protocolVersion: 'physical-targets-2x3-v3',
       number: 1,
       eye: 'closed',
       order: [...TYPES],
@@ -131,6 +136,13 @@ test('waits for listening completion, accepts zero and unable, requires explicit
   });
   await expect(page.getByText('OPEN YOUR EYES NOW · YOUR RESPONSE', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Submit response' })).toBeDisabled();
+  await expect(
+    page.getByRole('group', {
+      name: 'How much did this suggestion resonate with your current experience?',
+    }),
+  ).toBeVisible();
+  await expect(page.getByText('0 — Not at all', { exact: true })).toBeVisible();
+  await expect(page.getByText('10 — Very much', { exact: true })).toBeVisible();
   await page.getByRole('radio', { name: 'Unable to rate', exact: true }).check();
   await page.getByRole('radio', { name: '0', exact: true }).check();
   await page.getByRole('button', { name: 'Submit response' }).click();
@@ -165,6 +177,11 @@ test('shows email only after ending a session and permits a new session', async 
   await expect(page.getByLabel('Email address', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Request email summary' })).toBeDisabled();
   await page.getByRole('button', { name: 'Begin a new session' }).click();
+  await expect(page).toHaveTitle(/Suggestion Discovery Lab/);
+  await expect(
+    page.getByText('Step 1: Read the information and consent', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('list', { name: 'How to proceed' })).toBeVisible();
   await expect(page.getByText('Your choice, at every step.')).toBeVisible();
 });
 

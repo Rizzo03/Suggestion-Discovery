@@ -794,3 +794,13 @@ footer {
   font-weight: 600;
   margin: 18px 0 10px;
 }
+
+.participant-guide {
+  padding-inline-start: 1.4rem;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.participant-guide li {
+  margin-block: 0.5rem;
+}

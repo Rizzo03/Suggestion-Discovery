@@ -22,6 +22,7 @@ import {
   baselineSchema,
   canGenerate,
   CONSENT_VERSION,
+  RESONANCE_ASSESSMENT,
   csv,
   currentSuggestion,
   exactRatings,
@@ -177,6 +178,7 @@ export async function handle(req: Request, path: string[]) {
         associatedFeelings: b.associatedFeelings,
         symptomDuration: b.symptomDuration,
         consentVersion: CONSENT_VERSION,
+        assessment: RESONANCE_ASSESSMENT,
         consentAt: at,
         eligibility: {
           physicalSymptomsConfirmed: b.physicalEligibility,
@@ -418,10 +420,19 @@ export async function handle(req: Request, path: string[]) {
           .parse(await body(req));
         return json(
           publicSession(
-            await commit(s, respond(s.state, x.id, b.value, now()), 'usefulness_response', {
-              suggestionId: x.id,
-              value: b.value,
-            }),
+            await commit(
+              s,
+              respond(s.state, x.id, b.value, now()),
+              s.state.assessment?.construct === 'resonance'
+                ? 'resonance_response'
+                : 'usefulness_response',
+              {
+                suggestionId: x.id,
+                value: b.value,
+                measure: s.state.assessment?.construct ?? 'usefulness',
+                measureVersion: s.state.assessment?.version ?? 'legacy-usefulness',
+              },
+            ),
           ),
         );
       }
@@ -541,8 +552,8 @@ async function sendFeedback() {
       body: JSON.stringify({
         from,
         to: address,
-        subject: 'Your Suggestion Discovery session',
-        text: `Thank you for taking part in the private Suggestion Discovery technical pilot.\n\nIn this session you completed ${rounds} rounds and listened to ${listened} suggestions. You explored: ${s.state.experiences.join(', ')}. Your responses are individual observations, not evidence of treatment benefit. Usefulness can include relating differently to an experience without reducing its intensity. There is no expected score or improvement.\n\nThis is exploratory research, not healthcare. Contact the study team through your invitation for questions, privacy requests, or withdrawal.`,
+        subject: 'Your Suggestion Discovery Lab session',
+        text: `Thank you for taking part in the private Suggestion Discovery Lab technical pilot.\n\nIn this session you completed ${rounds} rounds and listened to ${listened} suggestions. You explored: ${s.state.experiences.join(', ')}. Your responses are individual observations, not evidence of treatment benefit. ${s.state.assessment?.construct === 'resonance' ? 'Resonance reflects personal connection with your experience, whether or not pain or discomfort changed.' : 'Your ratings described how useful the suggestions felt, without necessarily reducing intensity.'} There is no expected score or improvement.\n\nThis is exploratory research, not healthcare. Contact the study team through your invitation for questions, privacy requests, or withdrawal.`,
       }),
     });
     if (!response.ok)

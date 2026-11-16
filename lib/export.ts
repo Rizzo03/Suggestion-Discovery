@@ -14,6 +14,10 @@ export function sessionRows(sessions: Session[]) {
     primary_location: s.state.primaryLocation,
     symptom_duration: s.state.symptomDuration,
     associated_feelings: s.state.associatedFeelings,
+    assessment_construct: s.state.assessment?.construct ?? 'usefulness',
+    assessment_version: s.state.assessment?.version,
+    assessment_question: s.state.assessment?.question,
+    assessment_anchors: s.state.assessment?.anchors,
     consent_version: s.state.consentVersion,
     consent_at: s.state.consentAt,
     eligibility: s.state.eligibility,
@@ -70,7 +74,20 @@ export function suggestionRows(sessions: Session[]) {
           : x.response.value === null
             ? 'unable_to_rate'
             : 'rated',
-        usefulness: x.response?.value,
+        assessment_construct: x.response?.measure ?? s.state.assessment?.construct ?? 'usefulness',
+        assessment_version: x.response?.measureVersion ?? s.state.assessment?.version,
+        assessment_question: s.state.assessment?.question,
+        assessment_help: s.state.assessment?.help,
+        assessment_anchors: s.state.assessment?.anchors,
+        response_value: x.response?.value,
+        resonance:
+          (x.response?.measure ?? s.state.assessment?.construct) === 'resonance'
+            ? x.response?.value
+            : undefined,
+        usefulness:
+          (x.response?.measure ?? s.state.assessment?.construct ?? 'usefulness') === 'usefulness'
+            ? x.response?.value
+            : undefined,
         response_at: x.response?.at,
       })),
     ),

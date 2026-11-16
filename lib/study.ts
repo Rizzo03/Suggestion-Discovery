@@ -13,15 +13,24 @@ export const TYPES = [
   'affective_motivational_imagery',
   'affective_motivational_metaphorical',
 ] as const;
-export const STUDY_PROTOCOL_VERSION = 'physical-targets-2x3-v2';
-export const CONSENT_VERSION = 'physical-context-consent-2';
+export const STUDY_PROTOCOL_VERSION = 'physical-targets-2x3-v3';
+export const CONSENT_VERSION = 'physical-context-consent-3';
 export const PROMPT_VERSION = 'physical-target-suggestions-3';
 export const VOICE_INSTRUCTIONS =
   'Speak in a calm, neutral, warm tone at a steady, unhurried pace. Use natural pauses. No theatrical emphasis, persuasion, whispering, or music.';
-export const USEFULNESS_QUESTION =
-  'How useful was this suggestion in helping you respond to the pain or discomfort in your selected body area?';
-export const USEFULNESS_HELP =
-  'Usefulness may involve understanding, approaching, managing or relating differently to an experience, without necessarily reducing its intensity.';
+export const RESONANCE_QUESTION =
+  'How much did this suggestion resonate with your current experience?';
+export const RESONANCE_HELP =
+  'Consider how well the suggestion connected with your experience, whether or not it changed your pain or discomfort.';
+export const RESONANCE_ASSESSMENT = {
+  construct: 'resonance' as const,
+  version: 'resonance-1',
+  question: RESONANCE_QUESTION,
+  help: RESONANCE_HELP,
+  anchors: { zero: 'Not at all', ten: 'Very much' },
+  unableOption: 'Unable to rate',
+};
+export type Assessment = typeof RESONANCE_ASSESSMENT;
 export type Eye = 'open' | 'closed';
 export const intensitySchema = z.record(z.string(), z.number().int().min(0).max(10));
 export const baselineSchema = z
@@ -78,7 +87,12 @@ export type Suggestion = {
   audioSegments?: string[];
   audioRequestIds?: string[];
   audioProtocolVersion?: string;
-  response?: { value: number | null; at: string };
+  response?: {
+    value: number | null;
+    at: string;
+    measure?: 'resonance' | 'usefulness';
+    measureVersion?: string;
+  };
   heardAt?: string;
 };
 export type Round = {
@@ -101,6 +115,7 @@ export type Round = {
   suggestions: Suggestion[];
 };
 export type Study = {
+  assessment?: Assessment;
   primaryLocation?: BodyContext['primaryLocation'];
   associatedFeelings?: string[];
   symptomDuration?: BodyContext['symptomDuration'];
@@ -183,7 +198,12 @@ export function respond(s: Study, id: string, value: number | null, at: string):
     throw new StudyError('Listen to the current suggestion before submitting a response.');
   if (value !== null && (!Number.isInteger(value) || value < 0 || value > 10))
     throw new StudyError('Choose a rating from 0 to 10, or Unable to rate.', 400);
-  suggestion.response = { value, at };
+  suggestion.response = {
+    value,
+    at,
+    measure: next.assessment?.construct ?? 'usefulness',
+    measureVersion: next.assessment?.version ?? 'legacy-usefulness',
+  };
   const round = next.rounds.at(-1)!;
   if (round.suggestions.every((x) => x.response)) round.completedAt = at;
   return next;
