@@ -338,6 +338,7 @@ export async function handle(req: Request, path: string[]) {
             audioRequestId: audio.requestId,
             audioLeadInSeconds: audio.leadInSeconds,
             audioPauseSeconds: audio.pauseSeconds,
+            audioSpeed: audio.speed,
             audioSegments: audio.segments,
             audioRequestIds: audio.requestIds,
             audioProtocolVersion: audio.protocolVersion,

@@ -1,4 +1,4 @@
-export const AUDIO_PROTOCOL_VERSION = 'sentence-pauses-v1';
+export const AUDIO_PROTOCOL_VERSION = 'sentence-pauses-v2';
 export const SENTENCE_PAUSE_SECONDS = 2;
 export function speechSegments(text: string) {
   const segments = [...new Intl.Segmenter('en', { granularity: 'sentence' }).segment(text)]
@@ -7,3 +7,5 @@ export function speechSegments(text: string) {
   if (!segments.length || segments.length > 16) throw new Error('Unsupported sentence count');
   return segments;
 }
+
+export const SPEECH_SPEED = 0.8;

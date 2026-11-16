@@ -1,7 +1,12 @@
 import 'server-only';
 import OpenAI from 'openai';
 import { joinWavWithPauses } from './wav';
-import { speechSegments, AUDIO_PROTOCOL_VERSION, SENTENCE_PAUSE_SECONDS } from './speech-segments';
+import {
+  speechSegments,
+  AUDIO_PROTOCOL_VERSION,
+  SENTENCE_PAUSE_SECONDS,
+  SPEECH_SPEED,
+} from './speech-segments';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { PROMPT_VERSION, StudyError, VOICE_INSTRUCTIONS } from './study';
 import { env } from './security';
@@ -88,7 +93,7 @@ export async function speech(text: string) {
             input,
             instructions: VOICE_INSTRUCTIONS,
             response_format: 'wav',
-            speed: 1,
+            speed: SPEECH_SPEED,
           },
           { timeout: 25_000, maxRetries: 0, signal },
         );
@@ -107,6 +112,7 @@ export async function speech(text: string) {
     bytes: joinWavWithPauses(clips, SENTENCE_PAUSE_SECONDS, 3),
     leadInSeconds: 3,
     pauseSeconds: SENTENCE_PAUSE_SECONDS,
+    speed: SPEECH_SPEED,
     segments,
     requestIds,
     protocolVersion: AUDIO_PROTOCOL_VERSION,

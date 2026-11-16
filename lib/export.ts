@@ -50,6 +50,7 @@ export function suggestionRows(sessions: Session[]) {
         audio_request_id: x.audioRequestId,
         audio_lead_in_seconds: x.audioLeadInSeconds ?? 0,
         audio_pause_seconds: x.audioPauseSeconds ?? 0,
+        audio_speed: x.audioSpeed ?? 1,
         audio_segments: x.audioSegments,
         audio_request_ids: x.audioRequestIds,
         audio_protocol_version: x.audioProtocolVersion ?? 'legacy',
