@@ -67,3 +67,21 @@ it('encrypts contacts with integrity and generates high entropy recovery tokens'
   expect(hash(a)).not.toContain(a);
   expect(token()).not.toBe(a);
 });
+
+it('accepts a strong investigator token copied with surrounding whitespace but rejects wrong tokens', () => {
+  const value = 'c'.repeat(64);
+  process.env.RESEARCH_EXPORT_TOKEN = ` \n${value}\r\n`;
+  const request = (token: string, scheme = 'Bearer') =>
+    new Request('https://pilot.test/api/research/quality', {
+      headers: { authorization: `${scheme} ${token}` },
+    });
+  expect(() => admin(request(value))).not.toThrow();
+  expect(() => admin(request(`  ${value}  `))).not.toThrow();
+  expect(() => admin(request(value, 'bearer'))).not.toThrow();
+  expect(() => admin(request('d'.repeat(64)))).toThrow(/Not authorised/);
+  expect(() => admin(request(value, 'Basic'))).toThrow(/Not authorised/);
+  process.env.RESEARCH_EXPORT_TOKEN = ' '.repeat(32) + 'short' + ' '.repeat(32);
+  expect(() => admin(request('short'))).toThrow(/security settings/);
+  process.env.RESEARCH_EXPORT_TOKEN = `${value.slice(0, 32)} ${value.slice(32)}`;
+  expect(() => admin(request(value))).toThrow(/Not authorised/);
+});

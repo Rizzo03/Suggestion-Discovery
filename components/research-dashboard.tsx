@@ -17,7 +17,7 @@ export function ResearchDashboard() {
     setReport(null);
     try {
       const response = await fetch(`/api/research/quality?window=${window}`, {
-        headers: { Authorization: `Bearer ${credential}` },
+        headers: { Authorization: `Bearer ${credential.trim()}` },
         cache: 'no-store',
       });
       if (!response.ok)

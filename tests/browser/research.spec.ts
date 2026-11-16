@@ -20,7 +20,7 @@ test('requires an investigator credential, shows a private aggregate report, and
   await expect(
     page.getByRole('table', { name: 'Resonance by target and delivery form' }),
   ).toHaveCount(0);
-  await page.getByLabel('Investigator export token').fill('synthetic-investigator-token');
+  await page.getByLabel('Investigator export token').fill('  synthetic-investigator-token  ');
   await page.getByRole('button', { name: 'Load private report' }).click();
   await expect(
     page.getByRole('table', { name: 'Resonance by target and delivery form' }),

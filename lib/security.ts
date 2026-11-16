@@ -67,10 +67,14 @@ export function checkOrigin(req: Request) {
     throw new StudyError('Request origin not allowed.', 403);
 }
 export function admin(req: Request) {
-  const bearer = req.headers.get('authorization') ?? '';
-  if (!equal(bearer, `Bearer ${secret('RESEARCH_EXPORT_TOKEN')}`))
-    throw new StudyError('Not authorised.', 401);
+  // Terminal-generated clipboard values can include a trailing newline. Keep
+  // normalisation local to this pasted investigator token, not encryption keys.
+  const expected = env('RESEARCH_EXPORT_TOKEN').trim();
+  if (expected.length < 32) throw new StudyError('Pilot security settings are incomplete.', 503);
+  const match = (req.headers.get('authorization') ?? '').match(/^Bearer\s+(.+)$/i);
+  if (!match || !equal(match[1].trim(), expected)) throw new StudyError('Not authorised.', 401);
 }
+
 function encryptionKey() {
   const key = Buffer.from(env('CONTACT_ENCRYPTION_KEY'), 'base64');
   if (key.length !== 32) throw new StudyError('Email privacy settings are incomplete.', 503);
