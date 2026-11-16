@@ -118,3 +118,8 @@ export function appendEndCue(wav: Buffer) {
 export function withSilentLeadIn(wav: Buffer, seconds = 3) {
   return joinWavWithPauses([wav], 0, seconds);
 }
+
+export function wavDurationSeconds(wav: Buffer) {
+  const wave = parseWave(wav);
+  return wave.samples.length / wave.byteRate;
+}

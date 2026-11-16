@@ -1,3 +1,6 @@
+import { qualitySummary } from './research-quality';
+import { wavDurationSeconds } from './wav';
+import { PILOT_PROFILE, pilotSnapshot } from './pilot';
 import 'server-only';
 import { cookies } from 'next/headers';
 import { randomInt, randomUUID } from 'node:crypto';
@@ -99,6 +102,10 @@ export async function handle(req: Request, path: string[]) {
       admin(req);
       return await exportData(req);
     }
+    if (route === 'research/quality' && method === 'GET') {
+      admin(req);
+      return await qualityData(req);
+    }
     if (route === 'research/send-feedback' && method === 'POST') {
       admin(req);
       return await sendFeedback();
@@ -180,6 +187,11 @@ export async function handle(req: Request, path: string[]) {
         symptomDuration: b.symptomDuration,
         consentVersion: CONSENT_VERSION,
         assessment: RESONANCE_ASSESSMENT,
+        pilot: pilotSnapshot({
+          text: process.env.OPENAI_TEXT_MODEL || 'gpt-4.1-mini',
+          audio: process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts',
+          voice: process.env.OPENAI_TTS_VOICE || 'coral',
+        }),
         consentAt: at,
         eligibility: {
           physicalSymptomsConfirmed: b.physicalEligibility,
@@ -241,6 +253,8 @@ export async function handle(req: Request, path: string[]) {
           },
           model: ai.model,
           promptVersion: PROMPT_VERSION,
+          pilotVersion: s.state.pilot?.pilotVersion,
+          textPolicyVersion: PILOT_PROFILE.textPolicy.version,
           targetGoals: ai.targetGoals,
           generationContext: context,
           prompt: ai.prompt,
@@ -256,6 +270,8 @@ export async function handle(req: Request, path: string[]) {
             closingSentence: ai.suggestions.find((x) => x.type === type)!.closingSentence,
             generatedBody: ai.suggestions.find((x) => x.type === type)!.generatedBody,
             textAssembly: ai.suggestions.find((x) => x.type === type)!.textAssembly,
+            wordCount: ai.suggestions.find((x) => x.type === type)!.wordCount,
+            sentenceCount: ai.suggestions.find((x) => x.type === type)!.sentenceCount,
             position: i + 1,
           })),
         };
@@ -368,6 +384,8 @@ export async function handle(req: Request, path: string[]) {
             audioRequestId: audio.requestId,
             audioLeadInSeconds: audio.leadInSeconds,
             audioEndCue: audio.endCue,
+            audioDurationSeconds: wavDurationSeconds(audio.bytes),
+            audioSpeechDurationSeconds: audio.speechDurationSeconds,
             audioPauseSeconds: audio.pauseSeconds,
             audioSpeed: audio.speed,
             audioSegments: audio.segments,
@@ -577,4 +595,41 @@ async function sendFeedback() {
     sent++;
   }
   return json({ sent });
+}
+
+async function qualityData(req: Request) {
+  const url = new URL(req.url);
+  const window = z.enum(['primary', 'all']).parse(url.searchParams.get('window') ?? 'primary');
+  const cutoff = z
+    .string()
+    .datetime()
+    .parse(url.searchParams.get('until') ?? now());
+  const limit = 2000,
+    pageSize = 100,
+    sessions: Session[] = [];
+  let truncated = false;
+  for (let offset = 0; offset <= limit; offset += pageSize) {
+    const { data, error } = await db()
+      .from('sessions')
+      .select('*')
+      .lte('created_at', cutoff)
+      .order('created_at')
+      .order('id')
+      .range(offset, offset + pageSize - 1);
+    check(error);
+    const page = (data ?? []) as Session[];
+    if (offset === limit) {
+      truncated = page.length > 0;
+      break;
+    }
+    sessions.push(...page);
+    if (page.length < pageSize) break;
+  }
+  return json({
+    ...qualitySummary(sessions, window),
+    generatedAt: now(),
+    cutoff,
+    truncated,
+    scanLimit: limit,
+  });
 }

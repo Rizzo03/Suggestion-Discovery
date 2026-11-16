@@ -150,12 +150,13 @@ it('adds the sensory closing exactly once even when the model repeats it or vari
     }
   }
 });
-it('retains different sentences while moving the single closing to the end', () => {
+it('retains other sentences while moving the single closing to the end', () => {
   const input = contentFixture(),
     closing = sensoryClosing('direct', sampleContext);
-  input.sensory_discriminative.direct = `${input.sensory_discriminative.direct} ${closing} Notice the area at your own pace. ${closing}`;
+  const original = input.sensory_discriminative.direct;
+  const parts = original.split(/(?<=\.)\s+/);
+  input.sensory_discriminative.direct = `${parts[0]} ${closing} ${parts.slice(1).join(' ')} ${closing}`;
   const result = assembleSuggestions(input, sampleContext).suggestions[0];
-  expect(result.text).toContain('Notice the area at your own pace.');
-  expect(result.text.endsWith(closing)).toBe(true);
+  expect(result.text).toBe(`${original} ${closing}`);
   expect(result.text.split(closing).length - 1).toBe(1);
 });

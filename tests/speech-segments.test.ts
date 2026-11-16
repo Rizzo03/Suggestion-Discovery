@@ -14,7 +14,7 @@ it('segments punctuation without speaking pause markers or changing sentence ord
 it('segments all six location-specific recordings without inserting spoken pause instructions', () => {
   for (const suggestion of assembleSuggestions(contentFixture(), sampleContext).suggestions) {
     const segments = speechSegments(suggestion.text);
-    expect(segments).toHaveLength(suggestion.contentCategory === 'sensory_discriminative' ? 4 : 3);
+    expect(segments).toHaveLength(4);
     if (suggestion.closingSentence) expect(segments.at(-1)).toBe(suggestion.closingSentence);
     expect(segments.join(' ')).toBe(suggestion.text);
   }

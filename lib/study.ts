@@ -1,3 +1,4 @@
+import { PILOT_PROFILE, type PilotSnapshot } from './pilot';
 import type { AudioEndCue } from './audio-cue';
 import { z } from 'zod';
 import {
@@ -20,9 +21,9 @@ export const TYPES = [
   'affective_motivational_imagery',
   'affective_motivational_metaphorical',
 ] as const;
-export const STUDY_PROTOCOL_VERSION = 'physical-targets-2x3-v4';
-export const CONSENT_VERSION = 'physical-context-consent-4';
-export const PROMPT_VERSION = 'physical-target-suggestions-6';
+export const STUDY_PROTOCOL_VERSION = PILOT_PROFILE.protocolVersion;
+export const CONSENT_VERSION = PILOT_PROFILE.consentVersion;
+export const PROMPT_VERSION = PILOT_PROFILE.promptVersion;
 export const VOICE_INSTRUCTIONS =
   'Speak in a calm, neutral, warm tone at a steady, unhurried pace. Use natural pauses. No theatrical emphasis, persuasion, whispering, or music.';
 export const RESONANCE_QUESTION =
@@ -94,6 +95,10 @@ export type Suggestion = {
   voiceInstructions?: string;
   audioCreatedAt?: string;
   audioRequestId?: string;
+  wordCount?: number;
+  sentenceCount?: number;
+  audioDurationSeconds?: number;
+  audioSpeechDurationSeconds?: number;
   audioEndCue?: AudioEndCue;
   audioLeadInSeconds?: number;
   audioPauseSeconds?: number;
@@ -110,6 +115,8 @@ export type Suggestion = {
   heardAt?: string;
 };
 export type Round = {
+  pilotVersion?: string;
+  textPolicyVersion?: string;
   pairedInstructionBodies?: string[];
   instructionPairs?: Record<string, string[]>;
   targetGoals?: Record<ContentCategory, string>;
@@ -129,6 +136,7 @@ export type Round = {
   suggestions: Suggestion[];
 };
 export type Study = {
+  pilot?: PilotSnapshot;
   assessment?: Assessment;
   primaryLocation?: BodyContext['primaryLocation'];
   associatedFeelings?: string[];
@@ -184,7 +192,10 @@ export function assertActive(s: Study) {
 }
 export function canGenerate(s: Study) {
   assertActive(s);
-  if (s.protocolVersion !== STUDY_PROTOCOL_VERSION)
+  if (
+    s.protocolVersion !== STUDY_PROTOCOL_VERSION ||
+    s.pilot?.pilotVersion !== PILOT_PROFILE.pilotVersion
+  )
     throw new StudyError(
       'This session uses the earlier protocol. End it and begin a new session for the physical-symptom listening experience.',
     );

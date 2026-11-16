@@ -1,3 +1,4 @@
+import { audioFixture } from './audio-fixture';
 import { END_CUE } from '../lib/audio-cue';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { Session, StudyError, TYPES } from '../lib/study';
@@ -60,7 +61,7 @@ vi.mock('../lib/db', () => ({
 vi.mock('../lib/ai', () => ({
   generate: mock.generate,
   speech: async () => ({
-    bytes: Buffer.from('audio-fixture'),
+    bytes: audioFixture(),
     model: 'tts-test',
     voice: 'coral',
     leadInSeconds: 3,
@@ -117,7 +118,7 @@ describe('server route protocol with mocked external providers', () => {
         mock.session!.state.experiences,
         expect.objectContaining({ associatedSensations: ['Aching', 'Tightness'] }),
       );
-      expect(round.protocolVersion).toBe('physical-targets-2x3-v4');
+      expect(round.protocolVersion).toBe('physical-targets-2x3-v5');
       expect(new Set(round.order)).toEqual(new Set(TYPES));
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(409);
       for (let i = 0; i < TYPES.length; i++) {

@@ -103,7 +103,7 @@ test('waits for listening completion, accepts zero and unable, requires explicit
   state.rounds = [
     {
       id: 'round1',
-      protocolVersion: 'physical-targets-2x3-v4',
+      protocolVersion: 'physical-targets-2x3-v5',
       number: 1,
       eye: 'closed',
       order: [...TYPES],

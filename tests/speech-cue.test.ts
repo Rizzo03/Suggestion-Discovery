@@ -1,3 +1,4 @@
+import { wavDurationSeconds } from '../lib/wav';
 import { expect, it, vi } from 'vitest';
 import { END_CUE } from '../lib/audio-cue';
 import { AUDIO_PROTOCOL_VERSION } from '../lib/speech-segments';
@@ -33,6 +34,8 @@ it('encodes the end cue into the actual speech result without asking TTS to spea
     'Notice the sensation.',
     'It can feel softer.',
   ]);
+  expect(result.durationSeconds).toBeCloseTo(wavDurationSeconds(result.bytes), 6);
+  expect(result.speechDurationSeconds).toBeCloseTo(8 / 48000, 6);
   expect(result.endCue).toEqual(END_CUE);
   expect(result.protocolVersion).toBe(AUDIO_PROTOCOL_VERSION);
   expect(result.bytes.length).toBe(44 + 3 * 48000 + 4 * 48000 + 8 + 48000);

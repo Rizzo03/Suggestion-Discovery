@@ -1,3 +1,4 @@
+import { textStatistics, meetsTextPolicy } from './text-policy';
 import { z } from 'zod';
 import { CONTENT_CATEGORIES, DELIVERY_STYLES, DeliveryStyle, generatedSchema } from './study';
 import { BodyContext, spokenLocation } from './body-context';
@@ -81,8 +82,14 @@ export function assembleSuggestions(
     if (suggestion.deliveryStyle === 'imagery' && !text.startsWith(`imagine your ${location}`))
       throw new Error('Imagery suggestions must begin with Imagine and the selected body area');
   }
+  if (suggestions.some((x) => !meetsTextPolicy(x.text)))
+    throw new Error('Final suggestions must have four sentences and 65 to 85 words');
   return {
-    suggestions: suggestions.map((x, i) => ({ ...x, type: checked.suggestions[i].type })),
+    suggestions: suggestions.map((x, i) => ({
+      ...x,
+      ...textStatistics(x.text),
+      type: checked.suggestions[i].type,
+    })),
     targetGoals: {
       sensory_discriminative: input.sensory_discriminative.goal,
       affective_motivational: input.affective_motivational.goal,

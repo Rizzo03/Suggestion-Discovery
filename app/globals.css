@@ -804,3 +804,57 @@ footer {
 .participant-guide li {
   margin-block: 0.5rem;
 }
+
+.research-shell {
+  display: block;
+  max-width: 1260px;
+  margin: auto;
+  padding: 32px 24px;
+}
+.research-shell h1 {
+  font-size: clamp(32px, 5vw, 48px);
+}
+.research-shell .card {
+  margin-block: 24px;
+}
+.research-table {
+  overflow-x: auto;
+  margin-block: 18px;
+}
+.research-table table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.research-table caption {
+  text-align: left;
+  padding-bottom: 12px;
+  font-weight: 600;
+}
+.research-table th,
+.research-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.research-table th {
+  font-weight: 600;
+}
+.quality-counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
+}
+.quality-counts div {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.quality-counts dt {
+  font-size: 13px;
+}
+.quality-counts dd {
+  margin: 6px 0 0;
+  font-size: 24px;
+}

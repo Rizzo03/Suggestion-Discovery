@@ -7,6 +7,7 @@ import {
   ASSOCIATED_SENSATIONS,
   EXCLUSIVE_SENSATIONS,
 } from '@/lib/body-context';
+import { PILOT_PROFILE } from '@/lib/pilot';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import {
   currentSuggestion,
@@ -248,7 +249,7 @@ export function Discovery() {
         </a>
         <span className="pilot">
           <span />
-          Private technical pilot
+          Private technical pilot · {PILOT_PROFILE.pilotVersion}
         </span>
         {me && (
           <button
@@ -992,7 +993,7 @@ export function Discovery() {
           <a href="mailto:r.rizzo@neura.edu.au">r.rizzo@neura.edu.au</a>
         </span>
         <span>Exploratory research. Your experience, without expectations.</span>
-        <span>Technical pilot · v0.1</span>
+        <span>Technical pilot · {PILOT_PROFILE.pilotVersion}</span>
       </footer>
     </div>
   );
