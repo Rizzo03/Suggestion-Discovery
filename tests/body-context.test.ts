@@ -32,6 +32,9 @@ it('personalises the prompt from controlled context without inferring undisclose
   expect(text).toContain('Worry, Frustration');
   expect(text).toContain('SENSORY_DISCRIMINATIVE');
   expect(text).toContain('AFFECTIVE_MOTIVATIONAL');
+  expect(text).toContain('No metaphors, similes, symbolic substitutions');
+  expect(text).toContain('literal physical qualities');
+  expect(text).toContain('literal emotional or motivational response');
   const undisclosed = prompt(['Physical pain'], {
     primaryLocation: 'Lower back',
     associatedFeelings: ['Prefer not to say'],

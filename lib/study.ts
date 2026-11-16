@@ -15,7 +15,7 @@ export const TYPES = [
 ] as const;
 export const STUDY_PROTOCOL_VERSION = 'physical-targets-2x3-v2';
 export const CONSENT_VERSION = 'physical-context-consent-2';
-export const PROMPT_VERSION = 'physical-target-suggestions-2';
+export const PROMPT_VERSION = 'physical-target-suggestions-3';
 export const VOICE_INSTRUCTIONS =
   'Speak in a calm, neutral, warm tone at a steady, unhurried pace. Use natural pauses. No theatrical emphasis, persuasion, whispering, or music.';
 export const USEFULNESS_QUESTION =

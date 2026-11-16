@@ -54,7 +54,7 @@ Server ownership checks are mandatory because the service-role client bypasses R
 
 ## Versions and historical compatibility
 
-Current protocol: `physical-targets-2x3-v2`. Consent: `physical-context-consent-2`. Prompt: `physical-target-suggestions-2`. Email consent remains `email-feedback-2`. Audio: `sentence-pauses-v3`.
+Current protocol: `physical-targets-2x3-v2`. Consent: `physical-context-consent-2`. Prompt: `physical-target-suggestions-3`. Email consent remains `email-feedback-2`. Audio: `sentence-pauses-v3`.
 
 Earlier records may contain the eleven broad experience choices, five suggestion types, initial open/closed randomisation or fixed eyes-closed rounds, direct/permissive shared bodies, and different audio speed/pause settings. They retain their original protocol, prompts, consent, labels, orders, texts, ratings and recordings. **No existing data are rewritten.** A returning participant with an active earlier-protocol session is prompted to end it and start a new one; the server refuses to generate new rounds for that older session. A new session obtains the new eligibility/consent and fresh baseline.
 
@@ -63,3 +63,5 @@ Historical `suggestion_type` and `paired_instruction_bodies` remain exported. Ne
 Do not interpret an intentionally ended session as completion of a prescribed dose. Use round/response completion and partial-round indicators. Neither usefulness scores nor intensity changes establish therapeutic efficacy.
 
 Revision v2 requires duration in the selected body area (Less than 3 months / 3 months or longer) and at least one feelings response, including Not aware of feelings. Consent explains duration collection and OpenAI processing; CSV retains `symptom_duration`. Start a new session; older records remain unchanged. Invalid/truncated model output receives at most one corrective regeneration within bounded provider timeouts; refusal and moderation rejection still fail closed. No database migration is required.
+
+Imagery asks participants to imagine the literal target experience: physical sensory qualities for sensory/discriminative, or an emotional/motivational response for affective/motivational. Metaphors, similes and symbolic substitutions are prohibited in imagery and reserved for Metaphorical. Explicit comparison markers are rejected and trigger the bounded corrective retry. This text screen cannot guarantee semantic separation; human content review remains necessary. Existing text/audio are retained; newly generated rounds use prompt version `physical-target-suggestions-3`.

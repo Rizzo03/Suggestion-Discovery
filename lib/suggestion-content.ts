@@ -38,6 +38,11 @@ export function assembleSuggestions(
       throw new Error('Every suggestion must name the selected body area');
     if (suggestion.deliveryStyle === 'direct' && !text.startsWith(`your ${location}`))
       throw new Error('Direct suggestions must begin with the selected body area');
+    if (
+      suggestion.deliveryStyle === 'imagery' &&
+      /\b(?:like|as if|as though|compared (?:with|to)|metaphor\w*|symboli\w*|analogy)\b/i.test(text)
+    )
+      throw new Error('Imagery must describe the literal target experience without comparisons');
     if (suggestion.deliveryStyle === 'imagery' && !text.startsWith(`imagine your ${location}`))
       throw new Error('Imagery suggestions must begin with Imagine and the selected body area');
   }

@@ -9,7 +9,7 @@ export const contentFixture = () => ({
     direct:
       'Your lower back can be noticed as an area with changing sensory boundaries. Notice its shape without requiring a change in intensity. You can stop whenever you wish.',
     imagery:
-      'Imagine your lower back as an area outlined by a soft line of light. Picture the boundary of that area. Nothing needs to change for you to leave this image.',
+      'Imagine your lower back feeling gently warm, with the sensation occupying a smaller area. Imagine the temperature and the boundaries of that sensation directly. You can stop imagining whenever you wish.',
     metaphorical:
       'The sensation in your lower back can be compared with a patch of weather. Its perceived edges may have different qualities. You can set aside this comparison whenever you wish.',
   },
@@ -18,7 +18,7 @@ export const contentFixture = () => ({
     direct:
       'Your lower back can be uncomfortable while you retain a choice about your response. Acknowledge any worry without requiring it to change. You can choose to pause this listening experience.',
     imagery:
-      'Imagine your lower back accompanied by an ordinary supportive space around you. Picture having room to choose your response to discomfort. This image does not require any feeling to change.',
+      'Imagine your lower back feeling uncomfortable while you respond with a sense of choice. Imagine acknowledging any frustration and choosing a patient response to that discomfort. No feeling needs to change, and you can stop whenever you wish.',
     metaphorical:
       'Responding to discomfort in your lower back can be compared with carrying a bag. The burden can be acknowledged while choosing the next response. You can put this comparison aside.',
   },

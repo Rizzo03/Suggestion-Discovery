@@ -66,3 +66,21 @@ describe('two experiential targets crossed with three delivery forms', () => {
     );
   });
 });
+
+it('rejects explicit comparisons in imagery for both targets while retaining metaphorical forms', () => {
+  for (const category of CONTENT_CATEGORIES) {
+    for (const comparison of [
+      'like a river',
+      'as if it were a river',
+      'as though it were weather',
+      'compared with a landscape',
+      'a symbolic river',
+    ]) {
+      const input = contentFixture();
+      input[category].imagery =
+        `Imagine your lower back ${comparison}. Notice the experience and choose whether to continue imagining.`;
+      expect(() => assembleSuggestions(input, sampleContext)).toThrow(/without comparisons/);
+    }
+  }
+  expect(assembleSuggestions(contentFixture(), sampleContext).suggestions).toHaveLength(6);
+});
