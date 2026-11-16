@@ -44,7 +44,9 @@ test('displays scan truncation and rejected investigator access clearly', async 
   await page.goto('/research');
   await page.getByLabel('Investigator export token').fill('wrong');
   await page.getByRole('button', { name: 'Load private report' }).click();
-  await expect(page.getByRole('alert')).toHaveText('Investigator credential not recognised.');
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Investigator credential not recognised.' }),
+  ).toHaveText('Investigator credential not recognised.');
   await page.unroute('**/api/research/quality?*');
   await page.route('**/api/research/quality?*', (route) =>
     route.fulfill({
@@ -58,5 +60,7 @@ test('displays scan truncation and rejected investigator access clearly', async 
     }),
   );
   await page.getByRole('button', { name: 'Load private report' }).click();
-  await expect(page.getByRole('alert')).toContainText('Partial report');
+  await expect(page.getByRole('alert').filter({ hasText: 'Partial report' })).toContainText(
+    'Partial report',
+  );
 });
