@@ -337,6 +337,10 @@ export async function handle(req: Request, path: string[]) {
             audioCreatedAt: now(),
             audioRequestId: audio.requestId,
             audioLeadInSeconds: audio.leadInSeconds,
+            audioPauseSeconds: audio.pauseSeconds,
+            audioSegments: audio.segments,
+            audioRequestIds: audio.requestIds,
+            audioProtocolVersion: audio.protocolVersion,
           });
           await commit(latest, next, 'audio_prepared', { suggestionId: x.id });
         } catch (err) {

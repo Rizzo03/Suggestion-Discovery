@@ -54,6 +54,10 @@ export type Suggestion = {
   audioCreatedAt?: string;
   audioRequestId?: string;
   audioLeadInSeconds?: number;
+  audioPauseSeconds?: number;
+  audioSegments?: string[];
+  audioRequestIds?: string[];
+  audioProtocolVersion?: string;
   response?: { value: number | null; at: string };
   heardAt?: string;
 };

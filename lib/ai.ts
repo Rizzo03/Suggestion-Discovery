@@ -1,6 +1,7 @@
 import 'server-only';
 import OpenAI from 'openai';
-import { withSilentLeadIn } from './wav';
+import { joinWavWithPauses } from './wav';
+import { speechSegments, AUDIO_PROTOCOL_VERSION, SENTENCE_PAUSE_SECONDS } from './speech-segments';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { PROMPT_VERSION, StudyError, VOICE_INSTRUCTIONS } from './study';
 import { env } from './security';
@@ -70,20 +71,48 @@ export async function speech(text: string) {
     );
   const model = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts';
   const voice = process.env.OPENAI_TTS_VOICE || 'coral';
-  const response = await openai().audio.speech.create({
-    model,
-    voice: voice as 'coral',
-    input: text,
-    instructions: VOICE_INSTRUCTIONS,
-    response_format: 'wav',
-    speed: 1,
-  });
+  const segments = speechSegments(text);
+  const client = openai();
+  const signal = AbortSignal.timeout(95_000);
+  const clips: Buffer[] = [];
+  const requestIds: string[] = [];
+  // Two at a time limits provider pressure while keeping preparation within the
+  // route timeout. Promise.all preserves sentence order regardless of completion.
+  for (let i = 0; i < segments.length; i += 2) {
+    const batch = await Promise.all(
+      segments.slice(i, i + 2).map(async (input) => {
+        const response = await client.audio.speech.create(
+          {
+            model,
+            voice: voice as 'coral',
+            input,
+            instructions: VOICE_INSTRUCTIONS,
+            response_format: 'wav',
+            speed: 1,
+          },
+          { timeout: 25_000, maxRetries: 0, signal },
+        );
+        return {
+          bytes: Buffer.from(await response.arrayBuffer()),
+          requestId: response.headers.get('x-request-id') ?? '',
+        };
+      }),
+    );
+    for (const clip of batch) {
+      clips.push(clip.bytes);
+      requestIds.push(clip.requestId);
+    }
+  }
   return {
-    bytes: withSilentLeadIn(Buffer.from(await response.arrayBuffer()), 3),
+    bytes: joinWavWithPauses(clips, SENTENCE_PAUSE_SECONDS, 3),
     leadInSeconds: 3,
+    pauseSeconds: SENTENCE_PAUSE_SECONDS,
+    segments,
+    requestIds,
+    protocolVersion: AUDIO_PROTOCOL_VERSION,
     model,
     voice,
     instructions: VOICE_INSTRUCTIONS,
-    requestId: response.headers.get('x-request-id') ?? undefined,
+    requestId: requestIds[0] || undefined,
   };
 }

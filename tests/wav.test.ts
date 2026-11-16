@@ -1,5 +1,5 @@
 import { it, expect } from 'vitest';
-import { withSilentLeadIn } from '../lib/wav';
+import { withSilentLeadIn, joinWavWithPauses } from '../lib/wav';
 function fixture() {
   const b = Buffer.alloc(48);
   b.write('RIFF');
@@ -43,4 +43,26 @@ it('supports the unknown-length data header used by streaming WAV writers', () =
   const result = withSilentLeadIn(b);
   expect(result.readUInt32LE(40)).toBe(144004);
   expect(result.subarray(result.length - 4)).toEqual(b.subarray(44));
+});
+
+it('inserts exactly two seconds between clips, once, with no trailing pause', () => {
+  const a = fixture(),
+    b = fixture();
+  b.writeInt16LE(3000, 44);
+  const result = joinWavWithPauses([a, b], 2, 3);
+  expect(result.length).toBe(44 + 144000 + 4 + 96000 + 4);
+  expect(result.subarray(44 + 144000, 44 + 144000 + 4)).toEqual(a.subarray(44));
+  expect(result.subarray(44 + 144000 + 4, 44 + 144000 + 4 + 96000).every((v) => v === 0)).toBe(
+    true,
+  );
+  expect(result.subarray(result.length - 4)).toEqual(b.subarray(44));
+  expect(result.readUInt32LE(40)).toBe(result.length - 44);
+});
+it('does not insert a sentence pause for a single clip and rejects mismatched formats', () => {
+  expect(joinWavWithPauses([fixture()], 2, 3)).toEqual(withSilentLeadIn(fixture(), 3));
+  const b = fixture();
+  b.writeUInt32LE(22050, 24);
+  expect(() => joinWavWithPauses([fixture(), b])).toThrow(/match/);
+  expect(() => joinWavWithPauses([])).toThrow();
+  expect(() => joinWavWithPauses([fixture()], -1)).toThrow();
 });

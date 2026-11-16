@@ -61,3 +61,5 @@ Protocol update: new rounds use `eyes-closed-v1` and consent `pilot-consent-3`. 
 Developed by **Dr Rod Rizzo — Pain Scientist — Centre for Pain IMPACT, Neuroscience Research Australia**.
 
 Suggestion wording update (`suggestions-2`): new suggestions exclude “try” and its inflections. Direct and permissive versions share exactly the same server-assembled instruction bodies and order; only “Now, …” versus “Invite yourself to …” differs. Begin a new session to test the revised content; existing research text/audio are retained unchanged.
+
+New audio uses `sentence-pauses-v1`: two-second inserted pauses between spoken sentences, matching boundaries for the direct/permissive pair, and the existing three-second lead-in. Cached audio is retained unchanged; prepare new suggestions to hear the updated pacing. No additional database migration is required.
