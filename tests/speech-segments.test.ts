@@ -29,7 +29,7 @@ it('uses identical pause boundaries for matched direct and permissive instructio
   expect(direct).toHaveLength(bodies.length);
   expect(permissive).toHaveLength(bodies.length);
   direct.forEach((s, i) =>
-    expect(s.slice('Now, '.length)).toBe(permissive[i].slice('Invite yourself to '.length)),
+    expect(s.slice('Now, '.length)).toBe(permissive[i].slice('You might '.length)),
   );
 });
 it('rejects empty text and excessive sentence counts', () => {

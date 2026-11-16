@@ -32,9 +32,7 @@ describe('three content categories by two wording styles', () => {
         (x) => x.contentCategory === category && x.deliveryStyle === 'permissive',
       )!;
       expect(direct.text).toBe(input[category].map((body) => `Now, ${body}.`).join(' '));
-      expect(permissive.text).toBe(
-        input[category].map((body) => `Invite yourself to ${body}.`).join(' '),
-      );
+      expect(permissive.text).toBe(input[category].map((body) => `You might ${body}.`).join(' '));
       expect(direct.type).toBe(`${category}_direct`);
       expect(permissive.type).toBe(`${category}_permissive`);
     }

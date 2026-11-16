@@ -18,7 +18,7 @@ Three content categories are crossed with two wording styles:
 
 External attention means noticing an actual neutral sound or contact with a supporting surface; it excludes imagined scenes and metaphor. Imagery means a concrete imagined sensory scene; it excludes symbolic comparisons and actual-environment attention exercises. Metaphorical reframing means an explicit everyday comparison focused on relating to the physical experience. These are operational definitions, not validated mechanisms or perfectly separable psychological processes. Model adherence needs human evaluation.
 
-OpenAI returns three lists of 3–5 instruction bodies, totalling a requested 65–80 words per list. The server constructs direct and permissive versions using exactly the same bodies and sequence; only “Now, ” versus “Invite yourself to ” differs. No independent style-specific sentence is added. All six final texts are validated and moderated before presentation. Prohibited wording includes the standalone word “try” and its inflections. Prompts prohibit efficacy promises, telling people that symptoms are harmless, ignoring warning signs, changing care, unsafe activity and forced focus on discomfort.
+OpenAI returns three lists of 3–5 instruction bodies, totalling a requested 65–80 words per list. The server constructs direct and permissive versions using exactly the same bodies and sequence; only “Now, ” versus “You might ” differs. No independent style-specific sentence is added. All six final texts are validated and moderated before presentation. Prohibited wording includes the standalone word “try” and its inflections. Prompts prohibit efficacy promises, telling people that symptoms are harmless, ignoring warning signs, changing care, unsafe activity and forced focus on discomfort.
 
 The six unique conditions appear once per round. The server enumerates valid permutations and draws uniformly using `crypto.randomInt`, excluding orders in which matched content versions are adjacent. The realised order, algorithm and timestamp are persisted. Refreshing does not rerandomise. This constraint reduces immediate paired repetition; it does not remove carryover, expectancy or order effects. Use the recorded order and an approved analysis plan.
 
@@ -53,10 +53,12 @@ Server ownership checks are mandatory because the service-role client bypasses R
 
 ## Versions and historical compatibility
 
-Current protocol: `physical-3x2-v1`. Consent: `physical-consent-1`. Prompt: `physical-suggestions-1`. Email consent remains `email-feedback-2`. Audio: `sentence-pauses-v3`.
+Current protocol: `physical-3x2-v1`. Consent: `physical-consent-1`. Prompt: `physical-suggestions-2`. Email consent remains `email-feedback-2`. Audio: `sentence-pauses-v3`.
 
 Earlier records may contain the eleven broad experience choices, five suggestion types, initial open/closed randomisation or fixed eyes-closed rounds, direct/permissive shared bodies, and different audio speed/pause settings. They retain their original protocol, prompts, consent, labels, orders, texts, ratings and recordings. **No existing data are rewritten.** A returning participant with an active earlier-protocol session is prompted to end it and start a new one; the server refuses to generate new rounds for that older session. A new session obtains the new eligibility/consent and fresh baseline.
 
 Historical `suggestion_type` and `paired_instruction_bodies` remain exported. New rows have six-condition IDs plus `content_category`, `delivery_style` and `instruction_pairs`; these dimensions are blank for historical rows rather than inferred. Session and round protocol fields allow analysis to distinguish designs. No database migration is needed for this revision: optional new JSON fields use the existing schema. Keep both initial Storage migrations applied.
 
 Do not interpret an intentionally ended session as completion of a prescribed dose. Use round/response completion and partial-round indicators. Neither usefulness scores nor intensity changes establish therapeutic efficacy.
+
+Wording revision `physical-suggestions-2` replaces the permissive prefix “Invite yourself to ” with “You might ” for all three content families. Direct wording, shared instruction bodies/order, audio pacing, eligibility and six-condition design are unchanged. Earlier stored text/audio are retained; new rounds use the revised prefix and record the new prompt version.

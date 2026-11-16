@@ -24,7 +24,7 @@ export function assembleSuggestions(input: z.infer<typeof roundContentSchema>) {
       contentCategory,
       deliveryStyle,
       text: bodies
-        .map((body) => `${deliveryStyle === 'direct' ? 'Now, ' : 'Invite yourself to '}${body}.`)
+        .map((body) => `${deliveryStyle === 'direct' ? 'Now, ' : 'You might '}${body}.`)
         .join(' '),
     }));
   });
