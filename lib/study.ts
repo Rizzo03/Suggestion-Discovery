@@ -14,7 +14,7 @@ export const EXPERIENCES = [
 ] as const;
 export const TYPES = ['metaphor', 'permissive', 'direct', 'imagery', 'attentional_shift'] as const;
 export const CONSENT_VERSION = 'pilot-consent-3';
-export const PROMPT_VERSION = 'suggestions-1';
+export const PROMPT_VERSION = 'suggestions-2';
 export const VOICE_INSTRUCTIONS =
   'Speak in a calm, neutral, warm tone at a steady, unhurried pace. Use natural pauses. No theatrical emphasis, persuasion, whispering, or music.';
 export const USEFULNESS_QUESTION =
@@ -58,6 +58,7 @@ export type Suggestion = {
   heardAt?: string;
 };
 export type Round = {
+  pairedInstructionBodies?: string[];
   protocolVersion?: string;
   id: string;
   number: number;

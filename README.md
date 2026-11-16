@@ -57,3 +57,7 @@ Implementation follows the official [Next.js cookie reference](https://nextjs.or
 Defaults are `gpt-4.1-mini` for suggestions and `gpt-4o-mini-tts` / `coral` for speech. Set model names explicitly for your approved pilot and record changes as protocol changes. **OpenAI currently documents the Speech API models as scheduled to shut down on 6 January 2027.** This implementation uses the currently supported Speech endpoint; replacing it with the recommended Realtime workflow is an API migration, not merely an environment-variable change. Complete that migration and verify exact spoken content before running this pilot after that date. The model and voice actually requested are stored per audio asset. Review current provider model lifecycle before enabling any deployment.
 
 Protocol update: new rounds use `eyes-closed-v1` and consent `pilot-consent-3`. Apply **both** SQL migrations in order, including `202611160001_wav_lead_in.sql`, to permit the WAV files. Existing MP3 files and earlier rounds are retained unchanged. Suggestion-type order is still randomised independently per round.
+
+Developed by **Dr Rod Rizzo — Pain Scientist — Centre for Pain IMPACT, Neuroscience Research Australia**.
+
+Suggestion wording update (`suggestions-2`): new suggestions exclude “try” and its inflections. Direct and permissive versions share exactly the same server-assembled instruction bodies and order; only “Now, …” versus “Invite yourself to …” differs. Begin a new session to test the revised content; existing research text/audio are retained unchanged.

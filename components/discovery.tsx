@@ -757,7 +757,10 @@ export function Discovery() {
         </section>
       </main>
       <footer>
-        <span>Suggestion Discovery</span>
+        <span>
+          Developed by Dr Rod Rizzo · Pain Scientist · Centre for Pain IMPACT, Neuroscience Research
+          Australia.
+        </span>
         <span>Exploratory research. Your experience, without expectations.</span>
         <span>Technical pilot · v0.1</span>
       </footer>

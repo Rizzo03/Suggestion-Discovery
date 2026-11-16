@@ -37,6 +37,7 @@ export function suggestionRows(sessions: Session[]) {
         exact_text: x.text,
         model: r.model,
         prompt_version: r.promptVersion,
+        paired_instruction_bodies: r.pairedInstructionBodies,
         exact_prompt: r.prompt,
         response_id: r.responseId,
         generated_at: r.createdAt,

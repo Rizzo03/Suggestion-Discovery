@@ -218,6 +218,7 @@ export async function handle(req: Request, path: string[]) {
           randomisation: { algorithm: 'Fisher-Yates; node:crypto.randomInt; v1', at },
           model: ai.model,
           promptVersion: PROMPT_VERSION,
+          pairedInstructionBodies: ai.pairedInstructionBodies,
           prompt: ai.prompt,
           responseId: ai.responseId,
           createdAt: at,
