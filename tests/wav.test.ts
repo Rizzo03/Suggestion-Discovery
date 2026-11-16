@@ -45,14 +45,14 @@ it('supports the unknown-length data header used by streaming WAV writers', () =
   expect(result.subarray(result.length - 4)).toEqual(b.subarray(44));
 });
 
-it('inserts exactly two seconds between clips, once, with no trailing pause', () => {
+it('inserts exactly four seconds between clips, once, with no trailing pause', () => {
   const a = fixture(),
     b = fixture();
   b.writeInt16LE(3000, 44);
-  const result = joinWavWithPauses([a, b], 2, 3);
-  expect(result.length).toBe(44 + 144000 + 4 + 96000 + 4);
+  const result = joinWavWithPauses([a, b], 4, 3);
+  expect(result.length).toBe(44 + 144000 + 4 + 192000 + 4);
   expect(result.subarray(44 + 144000, 44 + 144000 + 4)).toEqual(a.subarray(44));
-  expect(result.subarray(44 + 144000 + 4, 44 + 144000 + 4 + 96000).every((v) => v === 0)).toBe(
+  expect(result.subarray(44 + 144000 + 4, 44 + 144000 + 4 + 192000).every((v) => v === 0)).toBe(
     true,
   );
   expect(result.subarray(result.length - 4)).toEqual(b.subarray(44));

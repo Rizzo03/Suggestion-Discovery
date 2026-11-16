@@ -7,7 +7,7 @@ it('segments punctuation without speaking pause markers or changing sentence ord
     'Attend to a sound!',
     'Allow a moment?',
   ]);
-  expect(SENTENCE_PAUSE_SECONDS).toBe(2);
+  expect(SENTENCE_PAUSE_SECONDS).toBe(4);
 });
 it('uses identical pause boundaries for matched direct and permissive instructions', () => {
   const bodies = [
