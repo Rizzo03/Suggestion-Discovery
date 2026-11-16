@@ -1,3 +1,4 @@
+import type { AudioEndCue } from './audio-cue';
 import { z } from 'zod';
 import {
   BODY_LOCATIONS,
@@ -93,6 +94,7 @@ export type Suggestion = {
   voiceInstructions?: string;
   audioCreatedAt?: string;
   audioRequestId?: string;
+  audioEndCue?: AudioEndCue;
   audioLeadInSeconds?: number;
   audioPauseSeconds?: number;
   audioSpeed?: number;

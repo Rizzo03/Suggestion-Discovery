@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { END_CUE } from '../../lib/audio-cue';
 import { fixture } from '../fixtures';
 import { Session, TYPES } from '../../lib/study';
 const id = '00000000-0000-4000-8000-000000000001';
@@ -117,7 +118,7 @@ test('waits for listening completion, accepts zero and unable, requires explicit
         type,
         position: i + 1,
         text: 'A sample suggestion for physical symptoms.',
-        ...(i === 0 ? { audioPath: 'fixture', audioLeadInSeconds: 3 } : {}),
+        ...(i === 0 ? { audioPath: 'fixture', audioLeadInSeconds: 3, audioEndCue: END_CUE } : {}),
       })),
     },
   ];
@@ -146,6 +147,7 @@ test('waits for listening completion, accepts zero and unable, requires explicit
   await expect(page.getByRole('heading', { name: 'Listen at your own pace.' })).toBeVisible();
   await expect(page.getByLabel('Suggestion 1 of 6', { exact: true })).toBeVisible();
   await expect(page.getByText(/Take one gentle breath in and out/)).toBeVisible();
+  await expect(page.getByText(/Listen for the short, gentle tone/)).toBeVisible();
   await expect(
     page.getByText(/The audio will begin a few seconds after you press Play/),
   ).toBeVisible();
@@ -278,8 +280,57 @@ test('guides an existing participant to a new session without rewriting earlier 
   );
   await page.goto('/');
   await expect(
-    page.getByRole('heading', { name: 'A new physical-symptom experience is available.' }),
+    page.getByRole('heading', { name: 'Ready to explore the updated version?' }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      'End this session and start a new one to use the updated instructions and questions. Your previous responses will remain saved.',
+      { exact: true },
+    ),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'End this session' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Prepare this round' })).toHaveCount(0);
+});
+
+test('cached recordings without a cue retain truthful finish-based instructions', async ({
+  page,
+}) => {
+  const state = fixture();
+  const at = new Date().toISOString();
+  state.rounds = [
+    {
+      id: 'round',
+      protocolVersion: state.protocolVersion,
+      number: 1,
+      eye: 'closed',
+      order: [...TYPES],
+      randomisation: { algorithm: 'test', at },
+      model: 'test',
+      promptVersion: 'test',
+      prompt: 'test',
+      responseId: 'test',
+      createdAt: at,
+      suggestions: TYPES.map((type, i) => ({
+        id: `s${i}`,
+        type,
+        position: i + 1,
+        text: 'Sample text.',
+        ...(i === 0 ? { audioPath: 'cached', audioLeadInSeconds: 3 } : {}),
+      })),
+    },
+  ];
+  await page.route('**/api/me', (route) =>
+    route.fulfill({
+      json: { participantId: id, recoveryEnabled: false, session: { id, state, created_at: at } },
+    }),
+  );
+  await page.route('**/audio', (route) => route.fulfill({ body: '', contentType: 'audio/wav' }));
+  await page.goto('/');
+  await expect(
+    page.getByText(
+      'This recording has no end tone. Open your eyes when the audio finishes, then give your rating.',
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(page.getByText(/Listen for the short, gentle tone/)).toHaveCount(0);
 });

@@ -66,3 +66,43 @@ it('does not insert a sentence pause for a single clip and rejects mismatched fo
   expect(() => joinWavWithPauses([])).toThrow();
   expect(() => joinWavWithPauses([fixture()], -1)).toThrow();
 });
+
+it('preserves speech and inserts a single bounded, smoothly faded 660 Hz end cue', async () => {
+  const { appendEndCue } = await import('../lib/wav');
+  const { END_CUE } = await import('../lib/audio-cue');
+  const original = joinWavWithPauses([fixture(), fixture()], 4, 3);
+  const result = appendEndCue(original);
+  const originalSamples = original.subarray(44);
+  expect(result.subarray(44, 44 + originalSamples.length)).toEqual(originalSamples);
+  const gapBytes = Math.round(END_CUE.gapSeconds * 48000);
+  const toneFrames = Math.round(END_CUE.durationSeconds * 24000);
+  const tailBytes = Math.round(END_CUE.tailSeconds * 48000);
+  const cueStart = 44 + originalSamples.length + gapBytes;
+  expect(result.length).toBe(original.length + gapBytes + toneFrames * 2 + tailBytes);
+  expect(result.subarray(44 + originalSamples.length, cueStart).every((x) => x === 0)).toBe(true);
+  const samples = Array.from({ length: toneFrames }, (_, i) =>
+    result.readInt16LE(cueStart + i * 2),
+  );
+  expect(samples[0]).toBe(0);
+  expect(samples.at(-1)).toBe(0);
+  expect(Math.max(...samples.map(Math.abs))).toBeGreaterThan(3000);
+  expect(Math.max(...samples.map(Math.abs))).toBeLessThanOrEqual(
+    Math.ceil(32767 * END_CUE.peakAmplitude),
+  );
+  // Count rising zero crossings to verify tone pitch independently of sample construction.
+  const crossings = samples.flatMap((value, i) =>
+    i > toneFrames / 4 && i < (3 * toneFrames) / 4 && samples[i - 1] <= 0 && value > 0 ? [i] : [],
+  );
+  const measuredHz = (24000 * (crossings.length - 1)) / (crossings.at(-1)! - crossings[0]);
+  expect(measuredHz).toBeCloseTo(660, 0);
+  expect(result.subarray(cueStart + toneFrames * 2).every((x) => x === 0)).toBe(true);
+  expect(result.readUInt32LE(4)).toBe(result.length - 8);
+  expect(result.readUInt32LE(40)).toBe(result.length - 44);
+});
+it('rejects unsupported cue formats instead of writing a corrupt recording', async () => {
+  const { appendEndCue } = await import('../lib/wav');
+  const audio = fixture();
+  audio.writeUInt16LE(3, 20);
+  audio.writeUInt16LE(32, 34);
+  expect(() => appendEndCue(audio)).toThrow(/16-bit PCM/);
+});

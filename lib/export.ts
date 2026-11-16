@@ -67,6 +67,7 @@ export function suggestionRows(sessions: Session[]) {
         audio_created_at: x.audioCreatedAt,
         audio_request_id: x.audioRequestId,
         audio_lead_in_seconds: x.audioLeadInSeconds ?? 0,
+        audio_end_cue: x.audioEndCue,
         audio_pause_seconds: x.audioPauseSeconds ?? 0,
         audio_speed: x.audioSpeed ?? 1,
         audio_segments: x.audioSegments,

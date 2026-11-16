@@ -483,8 +483,8 @@ export function Discovery() {
                     <li>Prepare a round of six suggestions.</li>
                     <li>Prepare each audio, press Play, then close your eyes while listening.</li>
                     <li>
-                      Open your eyes, rate resonance and submit your response. Repeat for each
-                      suggestion.
+                      When you hear the end tone, open your eyes, rate resonance and submit your
+                      response. Repeat for each suggestion.
                     </li>
                     <li>
                       After three complete rounds, rate intensity again. Continue or stop whenever
@@ -829,12 +829,10 @@ export function Discovery() {
               <section className="card">
                 {state.protocolVersion !== STUDY_PROTOCOL_VERSION ? (
                   <>
-                    <h2>A new physical-symptom experience is available.</h2>
+                    <h2>Ready to explore the updated version?</h2>
                     <p>
-                      This saved session uses the earlier setup. End this session below, then begin
-                      a new one to select your body area, sensation qualities and associated
-                      feelings and review consent for the revised six-suggestion rounds. Your saved
-                      responses will be retained.
+                      End this session and start a new one to use the updated instructions and
+                      questions. Your previous responses will remain saved.
                     </p>
                   </>
                 ) : current ? (
@@ -870,7 +868,7 @@ export function Discovery() {
                     <h2>
                       {completed ? 'Ready for another perspective?' : 'Make yourself comfortable.'}
                     </h2>
-                    <EyeInstruction eye="closed" delayed />
+                    <EyeInstruction eye="closed" delayed endCue />
                     <p>
                       Six suggestions: sensory qualities and emotional/motivational response, each
                       in Direct, Imagery and Metaphorical form. Targets alternate in a randomised
@@ -999,7 +997,15 @@ export function Discovery() {
     </div>
   );
 }
-function EyeInstruction({ eye, delayed = false }: { eye: 'open' | 'closed'; delayed?: boolean }) {
+function EyeInstruction({
+  eye,
+  delayed = false,
+  endCue = false,
+}: {
+  eye: 'open' | 'closed';
+  delayed?: boolean;
+  endCue?: boolean;
+}) {
   return (
     <div className="eye-instruction">
       <span className="eye-symbol" aria-hidden="true">
@@ -1010,11 +1016,23 @@ function EyeInstruction({ eye, delayed = false }: { eye: 'open' | 'closed'; dela
         <p>
           {eye === 'closed'
             ? delayed
-              ? 'Take one gentle breath in and out, at your own pace. Press Play, then close your eyes. The audio will begin a few seconds after you press Play. When it finishes, open your eyes and rate how much the suggestion resonated with your current experience.'
+              ? 'Take one gentle breath in and out, at your own pace. Press Play, then close your eyes. The audio will begin a few seconds after you press Play.'
               : 'This saved round uses the earlier protocol. Close your eyes only while listening and open them immediately after the audio to give your rating.'
             : 'Keep your eyes open while listening. After each suggestion, give your rating.'}{' '}
           The next suggestion never starts automatically.
         </p>
+        {endCue ? (
+          <p>
+            Listen for the short, gentle tone at the end of the suggestion. When you hear it, open
+            your eyes and rate how much the suggestion resonated with your current experience. Set
+            the volume to a comfortable level before listening.
+          </p>
+        ) : (
+          <p>
+            This recording has no end tone. Open your eyes when the audio finishes, then give your
+            rating.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -1129,8 +1147,10 @@ function Listening({
       <div className="eyebrow">Step 5: Prepare and listen</div>
       <h2>Listen at your own pace.</h2>
       <p>
-        Choose Prepare audio if shown. When the controls appear, press Play, then close your eyes.
-        Open your eyes when the recording ends to give your response in Step 6.
+        Choose Prepare audio if shown. When the controls appear, press Play, then close your eyes.{' '}
+        {x.audioEndCue || !x.audioPath
+          ? 'When you hear the end tone, open your eyes to give your response in Step 6.'
+          : 'Open your eyes when the recording ends to give your response in Step 6.'}
       </p>
       <p className="help">
         Sensation qualities selected at the start:{' '}
@@ -1148,6 +1168,7 @@ function Listening({
       </p>
       <EyeInstruction
         eye={round.eye}
+        endCue={Boolean(x.audioEndCue || !x.audioPath)}
         delayed={
           x.audioLeadInSeconds !== undefined ||
           (!x.audioPath && round.protocolVersion === STUDY_PROTOCOL_VERSION)
@@ -1259,7 +1280,11 @@ function Listening({
       ) : (
         <p className="help">
           The response question becomes available after listening.{' '}
-          {round.eye === 'closed' ? 'Open your eyes immediately when the audio finishes.' : ''}
+          {round.eye === 'closed'
+            ? x.audioEndCue || !x.audioPath
+              ? 'Open your eyes when you hear the end tone.'
+              : 'Open your eyes immediately when the audio finishes.'
+            : ''}
         </p>
       )}
       <details onToggle={(e) => setTranscript(e.currentTarget.open)}>

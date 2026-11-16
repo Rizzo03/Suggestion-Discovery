@@ -1,3 +1,4 @@
+import { END_CUE } from '../lib/audio-cue';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { Session, StudyError, TYPES } from '../lib/study';
 import { fixture } from './fixtures';
@@ -63,6 +64,7 @@ vi.mock('../lib/ai', () => ({
     model: 'tts-test',
     voice: 'coral',
     leadInSeconds: 3,
+    endCue: END_CUE,
     instructions: 'standard',
     requestId: 'audio-request',
   }),
@@ -166,6 +168,7 @@ describe('server route protocol with mocked external providers', () => {
     expect(mock.events.filter((e) => e === 'resonance_response')).toHaveLength(18);
     expect(mock.session!.state.rounds[0].suggestions[0].audioSha256).toMatch(/^[0-9a-f]{64}$/);
     expect(mock.session!.state.rounds[0].prompt).toBe('exact prompt');
+    expect(mock.session!.state.rounds[0].suggestions[0].audioEndCue).toEqual(END_CUE);
   });
   it('releases failed generation leases and never overwrites a concurrent stop', async () => {
     mock.generate.mockRejectedValueOnce(new Error('provider'));

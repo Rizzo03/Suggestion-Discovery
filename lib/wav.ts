@@ -1,3 +1,4 @@
+import { END_CUE } from './audio-cue';
 type Wave = {
   fmt: Buffer;
   samples: Buffer;
@@ -62,22 +63,58 @@ export function joinWavWithPauses(clips: Buffer[], pauseSeconds = 2, leadInSecon
     chunks.push(w.samples);
   });
   const samples = Buffer.concat(chunks);
-  const fmtPadding = first.fmt.length % 2,
+  return encodeWave(first.fmt, samples);
+}
+function encodeWave(fmt: Buffer, samples: Buffer) {
+  const fmtPadding = fmt.length % 2,
     dataPadding = samples.length % 2;
-  const result = Buffer.alloc(
-    12 + 8 + first.fmt.length + fmtPadding + 8 + samples.length + dataPadding,
-  );
+  const result = Buffer.alloc(12 + 8 + fmt.length + fmtPadding + 8 + samples.length + dataPadding);
   result.write('RIFF', 0);
   result.writeUInt32LE(result.length - 8, 4);
   result.write('WAVEfmt ', 8);
-  result.writeUInt32LE(first.fmt.length, 16);
-  first.fmt.copy(result, 20);
-  const dataOffset = 20 + first.fmt.length + fmtPadding;
+  result.writeUInt32LE(fmt.length, 16);
+  fmt.copy(result, 20);
+  const dataOffset = 20 + fmt.length + fmtPadding;
   result.write('data', dataOffset);
   result.writeUInt32LE(samples.length, dataOffset + 4);
   samples.copy(result, dataOffset + 8);
   return result;
 }
+/** Append exactly one gently faded tone after speech; preserve all original samples. */
+export function appendEndCue(wav: Buffer) {
+  const wave = parseWave(wav);
+  const format = wave.fmt.readUInt16LE(0),
+    channels = wave.fmt.readUInt16LE(2),
+    sampleRate = wave.fmt.readUInt32LE(4),
+    bits = wave.fmt.readUInt16LE(14);
+  if (
+    format !== 1 ||
+    bits !== 16 ||
+    channels < 1 ||
+    channels > 8 ||
+    sampleRate < 8000 ||
+    sampleRate > 192000 ||
+    wave.alignment !== channels * 2 ||
+    wave.byteRate !== sampleRate * wave.alignment
+  )
+    throw new Error('End cue requires 16-bit PCM WAV audio');
+  const frames = Math.round(sampleRate * END_CUE.durationSeconds);
+  const tailFrames = Math.round(sampleRate * END_CUE.tailSeconds);
+  const samples = Buffer.alloc((frames + tailFrames) * wave.alignment);
+  for (let i = 0; i < frames; i++) {
+    const envelope = Math.sin((Math.PI * i) / (frames - 1)) ** 2;
+    const sample = Math.round(
+      32767 *
+        END_CUE.peakAmplitude *
+        envelope *
+        Math.sin((2 * Math.PI * END_CUE.frequencyHz * i) / sampleRate),
+    );
+    for (let channel = 0; channel < channels; channel++)
+      samples.writeInt16LE(sample, i * wave.alignment + channel * 2);
+  }
+  return joinWavWithPauses([wav, encodeWave(wave.fmt, samples)], END_CUE.gapSeconds, 0);
+}
+
 export function withSilentLeadIn(wav: Buffer, seconds = 3) {
   return joinWavWithPauses([wav], 0, seconds);
 }

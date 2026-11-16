@@ -1,6 +1,7 @@
 import 'server-only';
 import OpenAI from 'openai';
-import { joinWavWithPauses } from './wav';
+import { END_CUE } from './audio-cue';
+import { appendEndCue, joinWavWithPauses } from './wav';
 import {
   speechSegments,
   AUDIO_PROTOCOL_VERSION,
@@ -159,7 +160,8 @@ export async function speech(text: string) {
     }
   }
   return {
-    bytes: joinWavWithPauses(clips, SENTENCE_PAUSE_SECONDS, 3),
+    bytes: appendEndCue(joinWavWithPauses(clips, SENTENCE_PAUSE_SECONDS, 3)),
+    endCue: END_CUE,
     leadInSeconds: 3,
     pauseSeconds: SENTENCE_PAUSE_SECONDS,
     speed: SPEECH_SPEED,

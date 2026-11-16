@@ -1,4 +1,4 @@
-export const AUDIO_PROTOCOL_VERSION = 'sentence-pauses-v3';
+export const AUDIO_PROTOCOL_VERSION = 'sentence-pauses-v4-end-cue';
 export const SENTENCE_PAUSE_SECONDS = 4;
 export function speechSegments(text: string) {
   const segments = [...new Intl.Segmenter('en', { granularity: 'sentence' }).segment(text)]
