@@ -22,7 +22,7 @@ export const TYPES = [
 ] as const;
 export const STUDY_PROTOCOL_VERSION = 'physical-targets-2x3-v4';
 export const CONSENT_VERSION = 'physical-context-consent-4';
-export const PROMPT_VERSION = 'physical-target-suggestions-5';
+export const PROMPT_VERSION = 'physical-target-suggestions-6';
 export const VOICE_INSTRUCTIONS =
   'Speak in a calm, neutral, warm tone at a steady, unhurried pace. Use natural pauses. No theatrical emphasis, persuasion, whispering, or music.';
 export const RESONANCE_QUESTION =
@@ -84,7 +84,7 @@ export type Suggestion = {
   targetGoal?: string;
   closingSentence?: string;
   generatedBody?: string;
-  textAssembly?: 'sensory-closing-1';
+  textAssembly?: 'sensory-closing-1' | 'sensory-closing-2';
   text: string;
   position: number;
   audioPath?: string;

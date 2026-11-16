@@ -23,6 +23,23 @@ export function sensoryClosing(style: DeliveryStyle, context: BodyContext) {
     return `Let this comparison suggest a softer, less intense sensation in your ${location}.`;
   return `The sensation in your ${location} can feel softer and less intense.`;
 }
+function appendClosingOnce(body: string, closing: string) {
+  const sentenceKey = (text: string) =>
+    normal(text)
+      .replace(/[.!?…]+$/u, '')
+      .trim();
+  const closingKey = sentenceKey(closing);
+  // Split at punctuation even if the next sentence starts lowercase. ICU sentence
+  // segmentation can merge such a closing into the preceding sentence.
+  const remaining = body
+    .split(/(?<=[.!?…])(?=\s)/u)
+    .filter((segment) => sentenceKey(segment) !== closingKey)
+    .join('')
+    .trim();
+  if (!remaining)
+    throw new Error('Sensory suggestion body must include more than its closing sentence');
+  return `${remaining}${/[.!?…]$/.test(remaining) ? '' : '.'} ${closing}`;
+}
 export function assembleSuggestions(
   input: z.infer<typeof roundContentSchema>,
   context: BodyContext,
@@ -40,11 +57,9 @@ export function assembleSuggestions(
         contentCategory,
         deliveryStyle,
         targetGoal: input[contentCategory].goal,
-        text: closingSentence
-          ? `${body}${/[.!?…]$/.test(body) ? '' : '.'} ${closingSentence}`
-          : body,
+        text: closingSentence ? appendClosingOnce(body, closingSentence) : body,
         ...(closingSentence
-          ? { closingSentence, generatedBody: body, textAssembly: 'sensory-closing-1' as const }
+          ? { closingSentence, generatedBody: body, textAssembly: 'sensory-closing-2' as const }
           : {}),
       };
     }),

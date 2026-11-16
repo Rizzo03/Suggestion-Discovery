@@ -109,7 +109,7 @@ it('ends all sensory forms with a possible physical change and preserves affecti
         expect(suggestion.generatedBody).toBe(
           local.sensory_discriminative[suggestion.deliveryStyle],
         );
-        expect(suggestion.textAssembly).toBe('sensory-closing-1');
+        expect(suggestion.textAssembly).toBe('sensory-closing-2');
         expect(suggestion.closingSentence).toMatch(/softer.*less intense/);
         expect(suggestion.closingSentence).toContain(area);
         expect(suggestion.closingSentence).not.toMatch(/will|must|pain.free|calm|happy/);
@@ -121,4 +121,41 @@ it('ends all sensory forms with a possible physical change and preserves affecti
       }
     }
   }
+});
+
+it('adds the sensory closing exactly once even when the model repeats it or varies case and punctuation', () => {
+  for (const style of DELIVERY_STYLES) {
+    const closing = sensoryClosing(style, sampleContext);
+    const clean = contentFixture();
+    const expected = assembleSuggestions(clean, sampleContext).suggestions.find(
+      (s) => s.type === `sensory_discriminative_${style}`,
+    )!.text;
+    for (const ending of [
+      closing,
+      closing.toLowerCase(),
+      `${closing} ${closing}`,
+      `${closing}\n\n${closing.toUpperCase()}`,
+      closing.replace(/\.$/, '!'),
+      closing.replace(/ /g, '  ').replace(/\.$/, ''),
+      closing.normalize('NFKC'),
+    ]) {
+      const input = contentFixture();
+      input.sensory_discriminative[style] += ` ${ending}`;
+      const result = assembleSuggestions(input, sampleContext).suggestions.find(
+        (s) => s.type === `sensory_discriminative_${style}`,
+      )!;
+      expect(result.text).toBe(expected);
+      expect(result.generatedBody).toBe(input.sensory_discriminative[style]);
+      expect(result.text.split(closing).length - 1).toBe(1);
+    }
+  }
+});
+it('retains different sentences while moving the single closing to the end', () => {
+  const input = contentFixture(),
+    closing = sensoryClosing('direct', sampleContext);
+  input.sensory_discriminative.direct = `${input.sensory_discriminative.direct} ${closing} Notice the area at your own pace. ${closing}`;
+  const result = assembleSuggestions(input, sampleContext).suggestions[0];
+  expect(result.text).toContain('Notice the area at your own pace.');
+  expect(result.text.endsWith(closing)).toBe(true);
+  expect(result.text.split(closing).length - 1).toBe(1);
 });
