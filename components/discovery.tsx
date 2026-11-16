@@ -760,6 +760,8 @@ export function Discovery() {
         <span>
           Developed by Dr Rod Rizzo · Pain Scientist · Centre for Pain IMPACT, Neuroscience Research
           Australia.
+          <br />
+          <a href="mailto:r.rizzo@neura.edu.au">r.rizzo@neura.edu.au</a>
         </span>
         <span>Exploratory research. Your experience, without expectations.</span>
         <span>Technical pilot · v0.1</span>
