@@ -28,10 +28,16 @@ test('consent, multiple experiences and explicit baseline ratings on small and l
   await page.getByLabel('I have read the information').check();
   await next.click();
   await page.getByRole('checkbox', { name: /^Physical pain/ }).check();
-  await page.getByRole('checkbox', { name: /^Uncomfortable physical sensation/ }).check();
+  await page.getByRole('checkbox', { name: /^Other uncomfortable physical sensation/ }).check();
   await expect(page.getByRole('button', { name: 'Continue with 2 selections' })).toBeDisabled();
   await page.getByLabel('Main body area', { exact: true }).selectOption('Lower back');
+  await page.getByLabel('Symptom duration', { exact: true }).selectOption('3 months or longer');
+  await expect(page.getByRole('button', { name: 'Continue with 2 selections' })).toBeDisabled();
+  await page.getByRole('checkbox', { name: 'Not aware of feelings', exact: true }).check();
   await page.getByRole('checkbox', { name: 'Worry', exact: true }).check();
+  await expect(
+    page.getByRole('checkbox', { name: 'Not aware of feelings', exact: true }),
+  ).not.toBeChecked();
   await page.getByRole('checkbox', { name: 'Frustration', exact: true }).check();
   await page.getByRole('button', { name: 'Continue with 2 selections' }).click();
   await expect(page.getByRole('button', { name: 'Begin session', exact: true })).toBeDisabled();
@@ -40,18 +46,21 @@ test('consent, multiple experiences and explicit baseline ratings on small and l
     .getByRole('radio', { name: '0', exact: true })
     .check();
   await page
-    .getByRole('group', { name: 'How intense is uncomfortable physical sensation right now?' })
+    .getByRole('group', {
+      name: 'How intense is other uncomfortable physical sensation right now?',
+    })
     .getByRole('radio', { name: '7', exact: true })
     .check();
   await page.getByRole('button', { name: 'Begin session', exact: true }).click();
   await expect(page.getByText('This round: eyes closed', { exact: true })).toBeVisible();
   expect(created).toMatchObject({
-    experiences: ['Physical pain', 'Uncomfortable physical sensation'],
-    ratings: { 'Physical pain': 0, 'Uncomfortable physical sensation': 7 },
+    experiences: ['Physical pain', 'Other uncomfortable physical sensation'],
+    ratings: { 'Physical pain': 0, 'Other uncomfortable physical sensation': 7 },
     consent: true,
     adult: true,
     physicalEligibility: true,
     primaryLocation: 'Lower back',
+    symptomDuration: '3 months or longer',
     associatedFeelings: ['Worry', 'Frustration'],
   });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
@@ -65,7 +74,7 @@ test('waits for listening completion, accepts zero and unable, requires explicit
   state.rounds = [
     {
       id: 'round1',
-      protocolVersion: 'physical-targets-2x3-v1',
+      protocolVersion: 'physical-targets-2x3-v2',
       number: 1,
       eye: 'closed',
       order: [...TYPES],

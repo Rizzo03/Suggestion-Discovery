@@ -18,6 +18,12 @@ export const BODY_LOCATIONS = [
   'Several body areas',
   'Another body area',
 ] as const;
+export const SYMPTOM_DURATIONS = ['Less than 3 months', '3 months or longer'] as const;
+export const EXCLUSIVE_FEELINGS = [
+  'None of these',
+  'Not aware of feelings',
+  'Prefer not to say',
+] as const;
 export const ASSOCIATED_FEELINGS = [
   'Worry',
   'Anxiety',
@@ -32,21 +38,24 @@ export const ASSOCIATED_FEELINGS = [
   'Calm',
   'Hopefulness',
   'None of these',
+  'Not aware of feelings',
   'Prefer not to say',
 ] as const;
 export const feelingsSchema = z
   .array(z.enum(ASSOCIATED_FEELINGS))
-  .max(14)
+  .max(15)
   .superRefine((values, ctx) => {
     if (
       new Set(values).size !== values.length ||
-      (values.some((x) => x === 'None of these' || x === 'Prefer not to say') && values.length > 1)
+      (values.some((x) => (EXCLUSIVE_FEELINGS as readonly string[]).includes(x)) &&
+        values.length > 1)
     )
       ctx.addIssue({ code: 'custom', message: 'Choose feelings or one exclusive alternative.' });
   });
 export const bodyContextSchema = z.object({
   primaryLocation: z.enum(BODY_LOCATIONS),
-  associatedFeelings: feelingsSchema.default([]),
+  associatedFeelings: feelingsSchema,
+  symptomDuration: z.enum(SYMPTOM_DURATIONS).optional(),
 });
 export type BodyContext = z.infer<typeof bodyContextSchema>;
 export function spokenLocation(location: BodyContext['primaryLocation']) {

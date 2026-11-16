@@ -175,6 +175,7 @@ export async function handle(req: Request, path: string[]) {
         experiences: b.experiences,
         primaryLocation: b.primaryLocation,
         associatedFeelings: b.associatedFeelings,
+        symptomDuration: b.symptomDuration,
         consentVersion: CONSENT_VERSION,
         consentAt: at,
         eligibility: {
@@ -217,6 +218,7 @@ export async function handle(req: Request, path: string[]) {
         const context = bodyContextSchema.parse({
           primaryLocation: s.state.primaryLocation,
           associatedFeelings: s.state.associatedFeelings ?? [],
+          symptomDuration: s.state.symptomDuration,
         });
         const ai = await generate(s.state.experiences, context);
         const at = now();

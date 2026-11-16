@@ -12,6 +12,7 @@ export function sessionRows(sessions: Session[]) {
     partial_round: s.state.rounds.some((r) => !r.completedAt),
     selected_experiences: s.state.experiences,
     primary_location: s.state.primaryLocation,
+    symptom_duration: s.state.symptomDuration,
     associated_feelings: s.state.associatedFeelings,
     consent_version: s.state.consentVersion,
     consent_at: s.state.consentAt,

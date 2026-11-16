@@ -8,7 +8,7 @@ Developed by **Dr Rod Rizzo — Pain Scientist — Centre for Pain IMPACT, Neuro
 
 1. Create a random participant ID or optionally recover an earlier ID. No name or email required.
 2. Read the coded-data research information and separately confirm adult/private-invitation eligibility, current physical symptoms and research consent.
-3. Select **Physical pain**, **Uncomfortable physical sensation**, or both; rate each on 0–10. At least one selected symptom must have a baseline intensity above zero. Subsequent measurements may be zero.
+3. Select **Physical pain**, **Other uncomfortable physical sensation**, or both; rate each on 0–10. At least one selected symptom must have a baseline intensity above zero. Subsequent measurements may be zero.
 4. Listen with eyes closed to **six suggestions per round**: two targets × three delivery forms.
 5. After each recording, open eyes and submit a required 0–10 usefulness response or Unable to rate before the next suggestion becomes available.
 6. Reassess every selected physical symptom after three complete rounds (**18 suggestions**), before continuing. Stop at any point or continue without a round-count ceiling.
@@ -19,7 +19,7 @@ Developed by **Dr Rod Rizzo — Pain Scientist — Centre for Pain IMPACT, Neuro
 | Sensory/discriminative: qualities of sensations in the selected body area | Direct, Imagery, Metaphorical |
 | Affective/motivational: unpleasantness, emotional response and agency     | Direct, Imagery, Metaphorical |
 
-Participants select one main body area and may select associated feelings or leave them undisclosed. All six suggestions mention the area. Each target has a recorded shared goal, expressed in three separately generated forms. Direct suggestions begin “Your [area] …”; imagery begins “Imagine your [area] …”; metaphorical suggestions use an explicit comparison. These are operational categories, not validated mechanisms. The server samples uniformly from 72 orders that alternate targets; human content review remains necessary.
+Participants select one main body area and must select at least one associated-feelings response; Not aware of feelings and Prefer not to say are available. All six suggestions mention the area. Each target has a recorded shared goal, expressed in three separately generated forms. Direct suggestions begin “Your [area] …”; imagery begins “Imagine your [area] …”; metaphorical suggestions use an explicit comparison. These are operational categories, not validated mechanisms. The server samples uniformly from 72 orders that alternate targets; human content review remains necessary.
 
 Speech uses the same voice/instructions and **0.8× speed**, with **four seconds of inserted silence between sentences** and **three seconds before speech begins**. Native controls never autoplay. “Try” and its word forms are rejected before new audio generation. Existing cached recordings are retained unchanged.
 
@@ -47,6 +47,8 @@ Core tests cover eligibility/baseline validation, six-condition assembly, prohib
 
 Participant access uses private HTTP-only cookies and server ownership checks. Supabase tables deny direct anon/authenticated access; state/event changes commit atomically with version checks. Optional emails are encrypted and stored separately; investigator CSV exports exclude emails and credentials. The public access gate and Vercel login protection remain enabled.
 
-Current session/round protocol: `physical-targets-2x3-v1`; consent: `physical-context-consent-1`; content prompt: `physical-target-suggestions-1`; audio: `sentence-pauses-v3`. Start a **new session** to use the revised eligibility, measures and six-suggestion rounds. Older sessions, five-suggestion rounds, original allocations, texts, responses and audio remain unchanged; they cannot silently generate rounds under the new setup. Exports distinguish protocol and content/style fields, leaving legacy-only dimensions blank.
+Current session/round protocol: `physical-targets-2x3-v2`; consent: `physical-context-consent-2`; content prompt: `physical-target-suggestions-2`; audio: `sentence-pauses-v3`. Start a **new session** to use the revised eligibility, measures and six-suggestion rounds. Older sessions, five-suggestion rounds, original allocations, texts, responses and audio remain unchanged; they cannot silently generate rounds under the new setup. Exports distinguish protocol and content/style fields, leaving legacy-only dimensions blank.
 
 OpenAI currently documents retirement of the Speech API models on **6 January 2027**. This application uses the currently supported Speech endpoint; migration to the recommended replacement requires an audio-workflow change and verification, not just a model-name change. See [OpenAI speech documentation](https://developers.openai.com/api/docs/guides/text-to-speech). Existing defaults are `gpt-4.1-mini`, `gpt-4o-mini-tts`, and voice `coral`; keep model/voice settings fixed during an approved cohort.
+
+Revision v2 requires duration in the selected body area (Less than 3 months / 3 months or longer) and at least one feelings response, including Not aware of feelings. Consent explains duration collection and OpenAI processing; CSV retains `symptom_duration`. Start a new session; older records remain unchanged. Invalid/truncated model output receives at most one corrective regeneration within bounded provider timeouts; refusal and moderation rejection still fail closed. No database migration is required.

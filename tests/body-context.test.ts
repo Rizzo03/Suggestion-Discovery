@@ -1,8 +1,9 @@
 import { it, expect } from 'vitest';
 import { bodyContextSchema, feelingsSchema, spokenLocation } from '../lib/body-context';
+import { baselineSchema } from '../lib/study';
 import { prompt } from '../lib/ai';
-it('requires a predefined body area and accepts optional non-diagnostic feelings', () => {
-  expect(bodyContextSchema.parse({ primaryLocation: 'Lower back' }).associatedFeelings).toEqual([]);
+it('requires a predefined body area and validates non-diagnostic feelings responses', () => {
+  expect(bodyContextSchema.safeParse({ primaryLocation: 'Lower back' }).success).toBe(false);
   expect(bodyContextSchema.safeParse({ associatedFeelings: [] }).success).toBe(false);
   expect(bodyContextSchema.safeParse({ primaryLocation: 'my full address' }).success).toBe(false);
   expect(
@@ -14,6 +15,7 @@ it('requires a predefined body area and accepts optional non-diagnostic feelings
   for (const feelings of [
     ['None of these', 'Worry'],
     ['Prefer not to say', 'Calm'],
+    ['Not aware of feelings', 'Worry'],
     ['Worry', 'Worry'],
     ['Unknown feeling'],
   ])
@@ -37,4 +39,38 @@ it('personalises the prompt from controlled context without inferring undisclose
   expect(undisclosed).toContain('none disclosed; do not infer distress');
   expect(undisclosed).not.toContain('Prefer not to say');
   expect(spokenLocation('Several body areas')).toBe('selected body areas');
+});
+
+it('requires duration and a feelings response at session creation, with non-disclosure alternatives', () => {
+  const baseline = {
+    experiences: ['Physical pain'],
+    ratings: { 'Physical pain': 5 },
+    consent: true,
+    adult: true,
+    physicalEligibility: true,
+    primaryLocation: 'Lower back',
+    symptomDuration: 'Less than 3 months',
+    associatedFeelings: ['Not aware of feelings'],
+  };
+  expect(baselineSchema.safeParse(baseline).success).toBe(true);
+  for (const values of [[], undefined])
+    expect(baselineSchema.safeParse({ ...baseline, associatedFeelings: values }).success).toBe(
+      false,
+    );
+  for (const value of ['', undefined, 'unknown'])
+    expect(baselineSchema.safeParse({ ...baseline, symptomDuration: value }).success).toBe(false);
+  expect(
+    baselineSchema.safeParse({
+      ...baseline,
+      symptomDuration: '3 months or longer',
+      associatedFeelings: ['Prefer not to say'],
+    }).success,
+  ).toBe(true);
+  expect(
+    prompt(['Physical pain'], {
+      primaryLocation: 'Lower back',
+      associatedFeelings: ['Not aware of feelings'],
+      symptomDuration: 'Less than 3 months',
+    }),
+  ).toContain('none disclosed; do not infer distress');
 });

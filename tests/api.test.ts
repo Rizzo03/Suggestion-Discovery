@@ -111,7 +111,7 @@ describe('server route protocol with mocked external providers', () => {
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(200);
       const round = mock.session!.state.rounds.at(-1)!;
       expect(round.eye).toBe('closed');
-      expect(round.protocolVersion).toBe('physical-targets-2x3-v1');
+      expect(round.protocolVersion).toBe('physical-targets-2x3-v2');
       expect(new Set(round.order)).toEqual(new Set(TYPES));
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(409);
       for (let i = 0; i < TYPES.length; i++) {
@@ -152,7 +152,7 @@ describe('server route protocol with mocked external providers', () => {
     expect(
       (
         await request(`sessions/${sid}/intensity`, {
-          ratings: { 'Physical pain': 0, 'Uncomfortable physical sensation': 0 },
+          ratings: { 'Physical pain': 0, 'Other uncomfortable physical sensation': 0 },
         })
       ).status,
     ).toBe(200);

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { BODY_LOCATIONS, feelingsSchema, BodyContext } from './body-context';
-export const EXPERIENCES = ['Physical pain', 'Uncomfortable physical sensation'] as const;
+import { BODY_LOCATIONS, SYMPTOM_DURATIONS, feelingsSchema, BodyContext } from './body-context';
+export const EXPERIENCES = ['Physical pain', 'Other uncomfortable physical sensation'] as const;
 export const CONTENT_CATEGORIES = ['sensory_discriminative', 'affective_motivational'] as const;
 export type ContentCategory = (typeof CONTENT_CATEGORIES)[number];
 export const DELIVERY_STYLES = ['direct', 'imagery', 'metaphorical'] as const;
@@ -13,9 +13,9 @@ export const TYPES = [
   'affective_motivational_imagery',
   'affective_motivational_metaphorical',
 ] as const;
-export const STUDY_PROTOCOL_VERSION = 'physical-targets-2x3-v1';
-export const CONSENT_VERSION = 'physical-context-consent-1';
-export const PROMPT_VERSION = 'physical-target-suggestions-1';
+export const STUDY_PROTOCOL_VERSION = 'physical-targets-2x3-v2';
+export const CONSENT_VERSION = 'physical-context-consent-2';
+export const PROMPT_VERSION = 'physical-target-suggestions-2';
 export const VOICE_INSTRUCTIONS =
   'Speak in a calm, neutral, warm tone at a steady, unhurried pace. Use natural pauses. No theatrical emphasis, persuasion, whispering, or music.';
 export const USEFULNESS_QUESTION =
@@ -32,7 +32,10 @@ export const baselineSchema = z
     adult: z.literal(true),
     physicalEligibility: z.literal(true),
     primaryLocation: z.enum(BODY_LOCATIONS),
-    associatedFeelings: feelingsSchema.default([]),
+    associatedFeelings: feelingsSchema.refine((values) => values.length > 0, {
+      message: 'Select at least one feelings response.',
+    }),
+    symptomDuration: z.enum(SYMPTOM_DURATIONS),
   })
   .superRefine((value, ctx) => {
     if (!value.experiences.some((e) => (value.ratings[e] ?? 0) > 0))
@@ -100,6 +103,7 @@ export type Round = {
 export type Study = {
   primaryLocation?: BodyContext['primaryLocation'];
   associatedFeelings?: string[];
+  symptomDuration?: BodyContext['symptomDuration'];
   eligibility?: { physicalSymptomsConfirmed: boolean; adult: boolean; at: string; version: string };
   protocolVersion?: string;
   experiences: string[];

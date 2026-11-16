@@ -92,7 +92,7 @@ describe('study protocol', () => {
       if (n % 3 === 0) {
         expect(() => canGenerate(s)).toThrow(/check-in/);
         expect(() => reassess(s, { 'Physical pain': 4 }, at)).toThrow();
-        s = reassess(s, { 'Physical pain': 4, 'Uncomfortable physical sensation': 4 }, at);
+        s = reassess(s, { 'Physical pain': 4, 'Other uncomfortable physical sensation': 4 }, at);
         expect(needsReassessment(s)).toBe(false);
       }
       canGenerate(s);
@@ -111,18 +111,18 @@ describe('study protocol', () => {
   });
   it('validates exact intensity keys and consent without default ratings', () => {
     expect(() =>
-      exactRatings(['Physical pain', 'Uncomfortable physical sensation'], {
+      exactRatings(['Physical pain', 'Other uncomfortable physical sensation'], {
         'Physical pain': 0,
-        'Uncomfortable physical sensation': 10,
+        'Other uncomfortable physical sensation': 10,
       }),
     ).not.toThrow();
     for (const r of [
       { 'Physical pain': 2 },
-      { 'Physical pain': 11, 'Uncomfortable physical sensation': 0 },
-      { 'Physical pain': 3, 'Uncomfortable physical sensation': 0, Other: 1 },
+      { 'Physical pain': 11, 'Other uncomfortable physical sensation': 0 },
+      { 'Physical pain': 3, 'Other uncomfortable physical sensation': 0, Other: 1 },
     ] as Record<string, number>[])
       expect(() =>
-        exactRatings(['Physical pain', 'Uncomfortable physical sensation'], r),
+        exactRatings(['Physical pain', 'Other uncomfortable physical sensation'], r),
       ).toThrow();
     expect(() =>
       exactRatings(['Physical pain', 'Physical pain'], { 'Physical pain': 0 }),
@@ -176,7 +176,8 @@ it('requires current physical symptoms, explicit eligibility and a positive base
     adult: true,
     physicalEligibility: true,
     primaryLocation: 'Lower back',
-    associatedFeelings: [],
+    symptomDuration: '3 months or longer',
+    associatedFeelings: ['Not aware of feelings'],
   };
   expect(baselineSchema.safeParse(valid).success).toBe(true);
   expect(baselineSchema.safeParse({ ...valid, physicalEligibility: false }).success).toBe(false);
@@ -193,8 +194,8 @@ it('requires current physical symptoms, explicit eligibility and a positive base
   expect(
     baselineSchema.safeParse({
       ...valid,
-      experiences: ['Physical pain', 'Uncomfortable physical sensation'],
-      ratings: { 'Physical pain': 0, 'Uncomfortable physical sensation': 2 },
+      experiences: ['Physical pain', 'Other uncomfortable physical sensation'],
+      ratings: { 'Physical pain': 0, 'Other uncomfortable physical sensation': 2 },
     }).success,
   ).toBe(true);
 });
