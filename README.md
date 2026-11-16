@@ -9,18 +9,17 @@ Developed by **Dr Rod Rizzo — Pain Scientist — Centre for Pain IMPACT, Neuro
 1. Create a random participant ID or optionally recover an earlier ID. No name or email required.
 2. Read the coded-data research information and separately confirm adult/private-invitation eligibility, current physical symptoms and research consent.
 3. Select **Physical pain**, **Uncomfortable physical sensation**, or both; rate each on 0–10. At least one selected symptom must have a baseline intensity above zero. Subsequent measurements may be zero.
-4. Listen with eyes closed to **six suggestions per round**: three content categories × two wording styles.
+4. Listen with eyes closed to **six suggestions per round**: two targets × three delivery forms.
 5. After each recording, open eyes and submit a required 0–10 usefulness response or Unable to rate before the next suggestion becomes available.
 6. Reassess every selected physical symptom after three complete rounds (**18 suggestions**), before continuing. Stop at any point or continue without a round-count ceiling.
 7. Optionally request one separately consented feedback email after ending a session.
 
-| Content category       | Operational boundary                                                                                     | Styles              |
-| ---------------------- | -------------------------------------------------------------------------------------------------------- | ------------------- |
-| External attention     | Notice real neutral external sounds or contact with a supporting surface; no imagined scene or metaphor  | Direct + permissive |
-| Imagery                | Imagine a concrete sensory scene; no symbolic comparison or instruction to attend to actual surroundings | Direct + permissive |
-| Metaphorical reframing | Explicit everyday comparison concerning one's relationship to the physical symptom                       | Direct + permissive |
+| Target                                                                    | Delivery forms                |
+| ------------------------------------------------------------------------- | ----------------------------- |
+| Sensory/discriminative: qualities of sensations in the selected body area | Direct, Imagery, Metaphorical |
+| Affective/motivational: unpleasantness, emotional response and agency     | Direct, Imagery, Metaphorical |
 
-The model generates one list of shared instruction bodies per category. The server assembles its pair using only **“Now, …”** versus **“You might …”**; bodies and order are identical. A random round order is sampled uniformly from all permutations that keep each matched pair nonadjacent. These operational categories are not a validated taxonomy; review generated content for adherence before recruitment. Pair separation reduces immediate repetition but does not eliminate order/carryover effects.
+Participants select one main body area and may select associated feelings or leave them undisclosed. All six suggestions mention the area. Each target has a recorded shared goal, expressed in three separately generated forms. Direct suggestions begin “Your [area] …”; imagery begins “Imagine your [area] …”; metaphorical suggestions use an explicit comparison. These are operational categories, not validated mechanisms. The server samples uniformly from 72 orders that alternate targets; human content review remains necessary.
 
 Speech uses the same voice/instructions and **0.8× speed**, with **four seconds of inserted silence between sentences** and **three seconds before speech begins**. Native controls never autoplay. “Try” and its word forms are rejected before new audio generation. Existing cached recordings are retained unchanged.
 
@@ -42,12 +41,12 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Core tests cover eligibility/baseline validation, six-condition assembly, prohibited wording, nonadjacent randomisation, protocol transitions, reassessment, legacy retention, security, actual PostgreSQL-compatible migrations and measured WAV silence. Desktop/mobile browser checks use mocked external providers and simulated media completion. Live model quality, actual speech, mobile audio and assistive-technology review require owner testing. Client playback events do not verify attention, eye state or whether audio was heard.
+Core tests cover eligibility/baseline validation, six-condition assembly, prohibited wording, alternating-target randomisation, protocol transitions, reassessment, legacy retention, security, actual PostgreSQL-compatible migrations and measured WAV silence. Desktop/mobile browser checks use mocked external providers and simulated media completion. Live model quality, actual speech, mobile audio and assistive-technology review require owner testing. Client playback events do not verify attention, eye state or whether audio was heard.
 
 ## Privacy and versions
 
 Participant access uses private HTTP-only cookies and server ownership checks. Supabase tables deny direct anon/authenticated access; state/event changes commit atomically with version checks. Optional emails are encrypted and stored separately; investigator CSV exports exclude emails and credentials. The public access gate and Vercel login protection remain enabled.
 
-Current session/round protocol: `physical-3x2-v1`; consent: `physical-consent-1`; content prompt: `physical-suggestions-2`; audio: `sentence-pauses-v3`. Start a **new session** to use the revised eligibility, measures and six-suggestion rounds. Older sessions, five-suggestion rounds, original allocations, texts, responses and audio remain unchanged; they cannot silently generate rounds under the new setup. Exports distinguish protocol and content/style fields, leaving legacy-only dimensions blank.
+Current session/round protocol: `physical-targets-2x3-v1`; consent: `physical-context-consent-1`; content prompt: `physical-target-suggestions-1`; audio: `sentence-pauses-v3`. Start a **new session** to use the revised eligibility, measures and six-suggestion rounds. Older sessions, five-suggestion rounds, original allocations, texts, responses and audio remain unchanged; they cannot silently generate rounds under the new setup. Exports distinguish protocol and content/style fields, leaving legacy-only dimensions blank.
 
 OpenAI currently documents retirement of the Speech API models on **6 January 2027**. This application uses the currently supported Speech endpoint; migration to the recommended replacement requires an audio-workflow change and verification, not just a model-name change. See [OpenAI speech documentation](https://developers.openai.com/api/docs/guides/text-to-speech). Existing defaults are `gpt-4.1-mini`, `gpt-4o-mini-tts`, and voice `coral`; keep model/voice settings fixed during an approved cohort.

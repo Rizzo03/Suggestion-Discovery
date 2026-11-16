@@ -3,7 +3,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Suggestion Discovery · Private research pilot',
   description:
-    'An exploratory listening experience for adults with physical pain or uncomfortable physical sensations. Private technical pilot, not treatment.',
+    'Listen to personalised audio suggestions for physical pain or an uncomfortable body area, targeting sensory qualities and emotional response. Private pilot, not treatment.',
   robots: { index: false, follow: false },
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {

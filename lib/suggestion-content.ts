@@ -1,38 +1,51 @@
 import { z } from 'zod';
-import { CONTENT_CATEGORIES, DeliveryStyle, generatedSchema } from './study';
-// Each content family has one set of instruction bodies. Only its style prefix changes.
-const instructionList = z.array(z.string().min(10).max(500)).min(3).max(5);
+import { CONTENT_CATEGORIES, DELIVERY_STYLES, generatedSchema } from './study';
+import { BodyContext, spokenLocation } from './body-context';
+const targetSchema = z.object({
+  goal: z.string().min(10).max(400),
+  direct: z.string().min(60).max(1800),
+  imagery: z.string().min(60).max(1800),
+  metaphorical: z.string().min(60).max(1800),
+});
 export const roundContentSchema = z.object({
-  external_attention: instructionList,
-  imagery: instructionList,
-  metaphorical_reframing: instructionList,
+  sensory_discriminative: targetSchema,
+  affective_motivational: targetSchema,
 });
 export function containsTry(text: string) {
   return /\b(?:try|tries|tried|trying)\b/i.test(text.normalize('NFKC'));
 }
-export function assembleSuggestions(input: z.infer<typeof roundContentSchema>) {
-  const suggestions = CONTENT_CATEGORIES.flatMap((contentCategory) => {
-    const bodies = input[contentCategory];
-    if (
-      bodies.some((body) => body !== body.trim() || !/^[a-z]/.test(body) || /[.!?\r\n]/.test(body))
-    )
-      throw new Error(
-        'Shared instructions must be lowercase verb phrases without terminal punctuation',
-      );
-    return (['direct', 'permissive'] as DeliveryStyle[]).map((deliveryStyle) => ({
+const normal = (text: string) => text.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
+export function assembleSuggestions(
+  input: z.infer<typeof roundContentSchema>,
+  context: BodyContext,
+) {
+  const location = normal(spokenLocation(context.primaryLocation));
+  const suggestions = CONTENT_CATEGORIES.flatMap((contentCategory) =>
+    DELIVERY_STYLES.map((deliveryStyle) => ({
       type: `${contentCategory}_${deliveryStyle}`,
       contentCategory,
       deliveryStyle,
-      text: bodies
-        .map((body) => `${deliveryStyle === 'direct' ? 'Now, ' : 'You might '}${body}.`)
-        .join(' '),
-    }));
-  });
+      targetGoal: input[contentCategory].goal,
+      text: input[contentCategory][deliveryStyle].trim(),
+    })),
+  );
   const checked = generatedSchema.parse({ suggestions });
-  if (checked.suggestions.some((x) => containsTry(x.text)))
+  if (suggestions.some((x) => containsTry(x.text) || containsTry(x.targetGoal)))
     throw new Error('Suggestion contains prohibited wording');
+  for (const suggestion of suggestions) {
+    const text = normal(suggestion.text);
+    if (!text.includes(location))
+      throw new Error('Every suggestion must name the selected body area');
+    if (suggestion.deliveryStyle === 'direct' && !text.startsWith(`your ${location}`))
+      throw new Error('Direct suggestions must begin with the selected body area');
+    if (suggestion.deliveryStyle === 'imagery' && !text.startsWith(`imagine your ${location}`))
+      throw new Error('Imagery suggestions must begin with Imagine and the selected body area');
+  }
   return {
     suggestions: suggestions.map((x, i) => ({ ...x, type: checked.suggestions[i].type })),
-    instructionPairs: structuredClone(input),
+    targetGoals: {
+      sensory_discriminative: input.sensory_discriminative.goal,
+      affective_motivational: input.affective_motivational.goal,
+    },
   };
 }

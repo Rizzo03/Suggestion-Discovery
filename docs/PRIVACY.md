@@ -5,7 +5,7 @@ This is a private technical pilot, not a compliance certification. Before inviti
 ## Boundaries
 
 - No name, date of birth, detailed free text, tracking pixels, advertising identifiers, analytics or browser-side provider keys.
-- Selected experience labels go to OpenAI for text generation; generated text goes to moderation and speech. `store:false` disables Chat Completions storage but does not establish zero provider retention. Review the OpenAI project's actual data controls and contractual terms.
+- Selected physical symptom labels, main body area and optionally disclosed associated feelings go to OpenAI for text generation; generated text goes to moderation and speech. `store:false` disables Chat Completions storage but does not establish zero provider retention. Review the OpenAI project's actual data controls and contractual terms.
 - Supabase stores sensitive research records and private audio. Vercel processes requests and may retain operational/access logs. Review provider defaults and configure minimised logging/retention. The application intentionally logs only safe error categories.
 - Cookies: `sd_pilot` (signed, 24h invitation gate) and `sd_identity` (256-bit device token, 30 days). These are necessary sign-in state, not tracking. A session may remain saved beyond cookie expiry under the study's retention plan. The pilot cookie is only one layer; require Vercel deployment protection too.
 - Shared pilot invitations limit access but are not individual approvals. Use a separate approved authentication/eligibility process if recruitment needs that level of control.
@@ -43,3 +43,5 @@ A server cannot establish eye closure or attention from browser events. Audio ca
 Native controls, keyboard-operated labelled inputs, explicit scale anchors, non-preselected responses, visible focus, live errors, reduced-motion handling, and responsive layouts are provided. Real assistive-technology testing and real-device audio/content review remain required before recruitment.
 
 The current experience is restricted by self-report to adults with physical pain or uncomfortable physical sensations. Physical eligibility and its timestamp/version are stored with consent. Earlier broader-category records are retained with their original protocol; the update does not convert those into physical-symptom records.
+
+The body-area and optional-feelings choices are stored with the session and exported as coded research context. None/Prefer-not-to-say selections are retained but excluded from the generation prompt. Consent version `physical-context-consent-1` explicitly explains context collection and OpenAI processing. Earlier consent records remain intact.

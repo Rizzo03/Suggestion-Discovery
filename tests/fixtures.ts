@@ -3,8 +3,10 @@ const at = '2026-11-15T10:00:00.000Z';
 export function fixture(): Study {
   return {
     experiences: ['Physical pain', 'Uncomfortable physical sensation'],
-    protocolVersion: 'physical-3x2-v1',
-    consentVersion: 'physical-consent-1',
+    primaryLocation: 'Lower back',
+    associatedFeelings: ['Worry', 'Frustration'],
+    protocolVersion: 'physical-targets-2x3-v1',
+    consentVersion: 'physical-context-consent-1',
     consentAt: at,
     baseline: { ratings: { 'Physical pain': 6, 'Uncomfortable physical sensation': 4 }, at },
     reassessments: [],

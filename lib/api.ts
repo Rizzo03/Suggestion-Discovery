@@ -35,6 +35,7 @@ import {
   STUDY_PROTOCOL_VERSION,
 } from './study';
 import { generate, speech } from './ai';
+import { bodyContextSchema } from './body-context';
 import { suggestionOrder } from './order';
 import { intensityRows, sessionRows, suggestionRows } from './export';
 const uuid = z.string().uuid();
@@ -172,6 +173,8 @@ export async function handle(req: Request, path: string[]) {
       const at = now();
       const state: Study = {
         experiences: b.experiences,
+        primaryLocation: b.primaryLocation,
+        associatedFeelings: b.associatedFeelings,
         consentVersion: CONSENT_VERSION,
         consentAt: at,
         eligibility: {
@@ -211,7 +214,11 @@ export async function handle(req: Request, path: string[]) {
         lease: lease.id,
       });
       try {
-        const ai = await generate(s.state.experiences);
+        const context = bodyContextSchema.parse({
+          primaryLocation: s.state.primaryLocation,
+          associatedFeelings: s.state.associatedFeelings ?? [],
+        });
+        const ai = await generate(s.state.experiences, context);
         const at = now();
         const n = s.state.rounds.length + 1;
         const order = suggestionOrder(randomInt);
@@ -223,12 +230,13 @@ export async function handle(req: Request, path: string[]) {
           order,
           randomisation: {
             algorithm:
-              'uniform eligible permutations; matched content pairs nonadjacent; crypto.randomInt; v1',
+              'uniform alternating-target permutations; 72 eligible orders; crypto.randomInt; v1',
             at,
           },
           model: ai.model,
           promptVersion: PROMPT_VERSION,
-          instructionPairs: ai.instructionPairs,
+          targetGoals: ai.targetGoals,
+          generationContext: context,
           prompt: ai.prompt,
           responseId: ai.responseId,
           createdAt: at,
@@ -238,6 +246,7 @@ export async function handle(req: Request, path: string[]) {
             text: ai.suggestions.find((x) => x.type === type)!.text,
             contentCategory: ai.suggestions.find((x) => x.type === type)!.contentCategory,
             deliveryStyle: ai.suggestions.find((x) => x.type === type)!.deliveryStyle,
+            targetGoal: ai.suggestions.find((x) => x.type === type)!.targetGoal,
             position: i + 1,
           })),
         };

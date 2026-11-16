@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 import { suggestionOrder } from '../lib/order';
 import { TYPES } from '../lib/study';
-it('samples the valid order space with every cell once and no adjacent matched pair', () => {
+it('samples the valid order space with every cell once and alternating experiential targets', () => {
   let count = 0;
   suggestionOrder((max) => {
     count = max;
@@ -13,10 +13,10 @@ it('samples the valid order space with every cell once and no adjacent matched p
     expect([...order].sort()).toEqual([...TYPES].sort());
     seen.add(order.join(','));
     for (let i = 1; i < order.length; i++)
-      expect(order[i].replace(/_(direct|permissive)$/, '')).not.toBe(
-        order[i - 1].replace(/_(direct|permissive)$/, ''),
+      expect(order[i].replace(/_(direct|imagery|metaphorical)$/, '')).not.toBe(
+        order[i - 1].replace(/_(direct|imagery|metaphorical)$/, ''),
       );
   }
-  expect(count).toBeGreaterThan(100);
+  expect(count).toBe(72);
   expect(seen.size).toBe(count);
 });

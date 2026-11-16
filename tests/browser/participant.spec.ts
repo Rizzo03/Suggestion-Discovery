@@ -29,6 +29,10 @@ test('consent, multiple experiences and explicit baseline ratings on small and l
   await next.click();
   await page.getByRole('checkbox', { name: /^Physical pain/ }).check();
   await page.getByRole('checkbox', { name: /^Uncomfortable physical sensation/ }).check();
+  await expect(page.getByRole('button', { name: 'Continue with 2 selections' })).toBeDisabled();
+  await page.getByLabel('Main body area', { exact: true }).selectOption('Lower back');
+  await page.getByRole('checkbox', { name: 'Worry', exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Frustration', exact: true }).check();
   await page.getByRole('button', { name: 'Continue with 2 selections' }).click();
   await expect(page.getByRole('button', { name: 'Begin session', exact: true })).toBeDisabled();
   await page
@@ -47,6 +51,8 @@ test('consent, multiple experiences and explicit baseline ratings on small and l
     consent: true,
     adult: true,
     physicalEligibility: true,
+    primaryLocation: 'Lower back',
+    associatedFeelings: ['Worry', 'Frustration'],
   });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
@@ -59,7 +65,7 @@ test('waits for listening completion, accepts zero and unable, requires explicit
   state.rounds = [
     {
       id: 'round1',
-      protocolVersion: 'physical-3x2-v1',
+      protocolVersion: 'physical-targets-2x3-v1',
       number: 1,
       eye: 'closed',
       order: [...TYPES],

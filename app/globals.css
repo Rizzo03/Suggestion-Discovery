@@ -275,7 +275,8 @@ header .text-button {
   font-weight: 600;
   margin: 20px 0;
 }
-.field input {
+.field input,
+.field select {
   width: 100%;
   display: block;
   border: 1px solid #bbc9bd;
@@ -781,4 +782,15 @@ footer {
   height: 100%;
   z-index: 1;
   cursor: pointer;
+}
+
+.feelings-help {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+.experience-grid legend {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 18px 0 10px;
 }

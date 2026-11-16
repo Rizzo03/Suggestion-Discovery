@@ -175,6 +175,8 @@ it('requires current physical symptoms, explicit eligibility and a positive base
     consent: true,
     adult: true,
     physicalEligibility: true,
+    primaryLocation: 'Lower back',
+    associatedFeelings: [],
   };
   expect(baselineSchema.safeParse(valid).success).toBe(true);
   expect(baselineSchema.safeParse({ ...valid, physicalEligibility: false }).success).toBe(false);

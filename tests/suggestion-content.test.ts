@@ -1,71 +1,64 @@
 import { describe, it, expect } from 'vitest';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { assembleSuggestions, containsTry, roundContentSchema } from '../lib/suggestion-content';
-import { CONTENT_CATEGORIES } from '../lib/study';
-export const contentFixture = () => ({
-  external_attention: [
-    'notice the sound of the room around you',
-    'attend to the support of the chair beneath you',
-    'notice how a nearby sound begins and ends',
-  ],
-  imagery: [
-    'imagine an ordinary quiet room with a comfortable chair',
-    'picture the light across a wall in that imagined room',
-    'imagine leaving the scene whenever you wish',
-  ],
-  metaphorical_reframing: [
-    'picture your relationship to the physical sensation as carrying a bag',
-    'consider how a bag can be present without determining every step',
-    'allow this comparison to offer room for choosing your next response',
-  ],
-});
-describe('three content categories by two wording styles', () => {
-  it('constructs six unique cells with byte-identical instruction bodies within each pair', () => {
+import { CONTENT_CATEGORIES, DELIVERY_STYLES, TYPES } from '../lib/study';
+import { contentFixture, sampleContext } from './content-fixture';
+describe('two experiential targets crossed with three delivery forms', () => {
+  it('constructs exactly the six target/form cells with region-specific text and target goals', () => {
     const input = contentFixture(),
-      result = assembleSuggestions(input);
+      result = assembleSuggestions(input, sampleContext);
+    expect(result.suggestions.map((x) => x.type)).toEqual([...TYPES]);
     expect(result.suggestions).toHaveLength(6);
-    for (const category of CONTENT_CATEGORIES) {
-      const direct = result.suggestions.find(
-        (x) => x.contentCategory === category && x.deliveryStyle === 'direct',
-      )!;
-      const permissive = result.suggestions.find(
-        (x) => x.contentCategory === category && x.deliveryStyle === 'permissive',
-      )!;
-      expect(direct.text).toBe(input[category].map((body) => `Now, ${body}.`).join(' '));
-      expect(permissive.text).toBe(input[category].map((body) => `You might ${body}.`).join(' '));
-      expect(direct.type).toBe(`${category}_direct`);
-      expect(permissive.type).toBe(`${category}_permissive`);
-    }
-    expect(result.instructionPairs).toEqual(input);
-    expect(new Set(result.suggestions.map((x) => x.type)).size).toBe(6);
+    for (const category of CONTENT_CATEGORIES)
+      for (const style of DELIVERY_STYLES) {
+        const x = result.suggestions.find(
+          (x) => x.contentCategory === category && x.deliveryStyle === style,
+        )!;
+        expect(x.text).toBe(input[category][style]);
+        expect(x.text.toLowerCase()).toContain('lower back');
+        expect(x.targetGoal).toBe(input[category].goal);
+      }
+    expect(result.targetGoals.sensory_discriminative).not.toBe(
+      result.targetGoals.affective_motivational,
+    );
   });
-  it('rejects prohibited wording in every content family', () => {
-    for (const category of CONTENT_CATEGORIES) {
-      const input = contentFixture();
-      input[category][0] = 'try noticing this physical experience';
-      expect(() => assembleSuggestions(input)).toThrow(/prohibited/);
-    }
+  it('rejects the prohibited word in every target/form combination', () => {
+    for (const category of CONTENT_CATEGORIES)
+      for (const style of DELIVERY_STYLES) {
+        const input = contentFixture();
+        input[category][style] += ' Try this.';
+        expect(() => assembleSuggestions(input, sampleContext)).toThrow(/prohibited/);
+      }
     for (const word of ['try', 'TRY', 'trying', 'tried', 'tries', 'ＴＲＹ'])
       expect(containsTry(word)).toBe(true);
-    expect(containsTry('Notice the geometry of the room and a nearby tree.')).toBe(false);
+    expect(containsTry('Notice the geometry of a nearby tree.')).toBe(false);
   });
-  it('rejects malformed shared bodies and missing categories', () => {
-    for (const body of [
-      'Notice the chair beneath you',
-      ' notice the chair beneath you',
-      'notice the chair beneath you.',
-      'notice the chair\nthen stop',
-    ]) {
-      const input = contentFixture();
-      input.external_attention[0] = body;
-      expect(() => assembleSuggestions(input)).toThrow();
-    }
+  it('fails closed if a location is missing, the wrong area is named, or delivery introductions are wrong', () => {
+    const missing = contentFixture();
+    missing.affective_motivational.metaphorical =
+      'Consider a bag of feelings and a quiet room without any named physical location.';
+    expect(() => assembleSuggestions(missing, sampleContext)).toThrow(/body area/);
+    expect(() =>
+      assembleSuggestions(contentFixture(), {
+        primaryLocation: 'Shoulder',
+        associatedFeelings: [],
+      }),
+    ).toThrow();
+    const prefix = contentFixture();
+    prefix.sensory_discriminative.direct =
+      'You might notice your lower back and the changing edges of the physical sensation.';
+    expect(() => assembleSuggestions(prefix, sampleContext)).toThrow(/Direct/);
+    const image = contentFixture();
+    image.affective_motivational.imagery =
+      'Picture your lower back as a place with room to choose how to respond to discomfort.';
+    expect(() => assembleSuggestions(image, sampleContext)).toThrow(/Imagery/);
+  });
+  it('requires both targets and all three forms in an SDK-compatible strict output schema', () => {
     expect(
-      roundContentSchema.safeParse({ external_attention: contentFixture().external_attention })
-        .success,
+      roundContentSchema.safeParse({
+        sensory_discriminative: contentFixture().sensory_discriminative,
+      }).success,
     ).toBe(false);
-  });
-  it('produces an SDK-compatible strict schema with exactly the three content families', () => {
     const format = zodResponseFormat(roundContentSchema, 'suggestion_round');
     expect(format.json_schema.strict).toBe(true);
     expect(format.json_schema.schema?.required).toEqual(

@@ -1,4 +1,5 @@
 'use client';
+import { BODY_LOCATIONS, ASSOCIATED_FEELINGS } from '@/lib/body-context';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import {
   currentSuggestion,
@@ -140,6 +141,8 @@ export function Discovery() {
   const [recoveryCode, setRecoveryCode] = useState('');
   const [showRecovery, setShowRecovery] = useState(false);
   const [selection, setSelection] = useState<string[]>([]);
+  const [primaryLocation, setPrimaryLocation] = useState('');
+  const [associatedFeelings, setAssociatedFeelings] = useState<string[]>([]);
   const [setup, setSetup] = useState<'consent' | 'experiences' | 'intensity'>('consent');
   const [consent, setConsent] = useState(false);
   const [adult, setAdult] = useState(false);
@@ -214,6 +217,8 @@ export function Discovery() {
     setAdult(false);
     setPhysicalEligibility(false);
     setSelection([]);
+    setPrimaryLocation('');
+    setAssociatedFeelings([]);
     setEmailSent(false);
     setEmailCancelled(false);
   }
@@ -246,21 +251,22 @@ export function Discovery() {
       </header>
       <main>
         <aside className="intro">
-          <div className="eyebrow">LISTEN. NOTICE. REFLECT.</div>
+          <div className="eyebrow">FOR PHYSICAL PAIN OR BODY DISCOMFORT</div>
           <h1 ref={heading} tabIndex={-1}>
-            A little space.
+            Audio suggestions for
             <br />
-            <em>A different perspective.</em>
+            <em>physical pain or body discomfort.</em>
           </h1>
           <p className="intro-copy">
-            Explore how different spoken suggestions feel useful to you, one listening moment at a
-            time.
+            For adults with physical pain or an uncomfortable area of the body. Choose the body area
+            and, if you wish, associated feelings. Listen to suggestions about the sensations
+            themselves and your emotional response, then tell us how useful each one feels.
           </p>
           <div className="orbit" aria-hidden="true">
             <div />
             <div />
             <div />
-            <span>Room for your experience.</span>
+            <span>Listen. Rate usefulness. Reflect.</span>
           </div>
           <p className="aside-note">
             No right response. No expected improvement.
@@ -453,23 +459,24 @@ export function Discovery() {
                   <h2>Your choice, at every step.</h2>
                   <p>
                     This experience is for adults who currently have physical pain or an
-                    uncomfortable physical sensation. Select the physical symptom or symptoms
-                    present now and rate their intensity. Each round has six AI-generated
-                    suggestions: external attention, imagery and metaphorical reframing, each in
-                    direct and permissive wording. Matched versions use the same instructions and
-                    may feel similar. Their order is randomised, with matched versions kept apart.
-                    Rate usefulness after each one. After three complete rounds (18 suggestions),
-                    rate intensity again. There is no expected improvement, and you can stop
-                    whenever you wish.
+                    uncomfortable area of the body. Choose your symptom type and its main body
+                    location, and optionally select feelings present alongside it. Each round has
+                    six personalised recordings: two targets—sensory qualities and
+                    emotional/motivational response—each delivered in Direct, Imagery (“Imagine…”)
+                    and Metaphorical form. The order is randomised, alternating targets. Rate
+                    usefulness after each recording. After three complete rounds (18 suggestions),
+                    rate intensity again. No improvement is expected, and you can stop whenever you
+                    wish.
                   </p>
                   <div className="info" aria-label="How your data is used">
                     <strong>Your responses will be used for research.</strong>
                     <p>
                       We explore how adults with current physical pain or uncomfortable physical
                       sensations respond to different spoken suggestions. We record your selected
-                      experiences, intensity and usefulness ratings, suggestions, listening events
-                      and session details under a random participant ID. Your name and email address
-                      are not required to take part.
+                      symptom types, body location, optional associated feelings, intensity and
+                      usefulness ratings, suggestions, listening events and session details under a
+                      random participant ID. Your name and email address are not required to take
+                      part.
                     </p>
                     <p>
                       These are coded research data: the ID links your sessions, so we do not
@@ -503,15 +510,17 @@ export function Discovery() {
                       service. It must remain a private pilot pending ethics and privacy review.
                     </p>
                     <p>
-                      We record your participant ID, sessions, selected experiences, intensity
-                      ratings, exact suggestions, AI metadata, randomisation, eye conditions, audio
-                      playback events, usefulness responses, and timestamps. The proposed usefulness
-                      question is exploratory and has not been described as a validated measure.
+                      We record your participant ID, sessions, selected symptoms, body location,
+                      optional associated feelings, intensity ratings, exact suggestions, AI
+                      metadata, randomisation, eye conditions, audio playback events, usefulness
+                      responses, and timestamps. The proposed usefulness question is exploratory and
+                      has not been described as a validated measure.
                     </p>
                     <p>
-                      Selected experience labels go to OpenAI to generate suggestions. Suggestion
-                      text goes to OpenAI for AI-generated speech. Data and audio are stored with
-                      Supabase and served via Vercel. Please do not enter identifying details.
+                      Selected symptom types, body location and any disclosed feelings go to OpenAI
+                      to personalise suggestions. Suggestion text goes to OpenAI for AI-generated
+                      speech. Data and audio are stored with Supabase and served via Vercel. Please
+                      do not enter identifying details.
                     </p>
                     <p>
                       Research data can be exported by authorised investigators. Device sign-in uses
@@ -598,11 +607,73 @@ export function Discovery() {
                       </label>
                     ))}
                   </fieldset>
+                  <label className="field">
+                    Main body area
+                    <select
+                      value={primaryLocation}
+                      onChange={(e) => setPrimaryLocation(e.target.value)}
+                      required
+                    >
+                      <option value="">Choose the main body area</option>
+                      {BODY_LOCATIONS.map((location) => (
+                        <option key={location} value={location}>
+                          {location}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p className="fine">
+                    Choose the area you want these suggestions to address. If several areas are
+                    involved, choose the main one or “Several body areas”.
+                  </p>
+                  <fieldset className="experience-grid">
+                    <legend>Current associated feelings (optional)</legend>
+                    <p className="feelings-help">
+                      How are you feeling alongside the pain or discomfort right now? Select any
+                      that fit, or skip this section. These feelings are not assumed to be caused by
+                      pain and are not a diagnosis.
+                    </p>
+                    {ASSOCIATED_FEELINGS.map((feeling) => (
+                      <label
+                        className={
+                          associatedFeelings.includes(feeling)
+                            ? 'experience selected'
+                            : 'experience'
+                        }
+                        key={feeling}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={associatedFeelings.includes(feeling)}
+                          onChange={(e) =>
+                            setAssociatedFeelings((values) => {
+                              if (!e.target.checked) return values.filter((x) => x !== feeling);
+                              if (feeling === 'None of these' || feeling === 'Prefer not to say')
+                                return [feeling];
+                              return [
+                                ...values.filter(
+                                  (x) => x !== 'None of these' && x !== 'Prefer not to say',
+                                ),
+                                feeling,
+                              ];
+                            })
+                          }
+                        />
+                        <span>{feeling}</span>
+                        <span aria-hidden="true">
+                          {associatedFeelings.includes(feeling) ? '✓' : '+'}
+                        </span>
+                      </label>
+                    ))}
+                  </fieldset>
                   <p className="fine">
                     No description or diagnosis is needed. Please do not share personal or
                     identifying details.
                   </p>
-                  <button disabled={!selection.length} onClick={() => setSetup('intensity')}>
+                  <button
+                    disabled={!selection.length || !primaryLocation}
+                    onClick={() => setSetup('intensity')}
+                  >
                     Continue with {selection.length || 'your'} selection
                     {selection.length !== 1 ? 's' : ''}
                     <span aria-hidden="true">→</span>
@@ -626,6 +697,8 @@ export function Discovery() {
                             consent,
                             adult,
                             physicalEligibility,
+                            primaryLocation,
+                            associatedFeelings,
                           }),
                         );
                       })
@@ -656,8 +729,8 @@ export function Discovery() {
                     <h2>A new physical-symptom experience is available.</h2>
                     <p>
                       This saved session uses the earlier setup. End this session below, then begin
-                      a new one to review eligibility and consent for the six-suggestion rounds.
-                      Your saved responses will be retained.
+                      a new one to select your body area and associated feelings and review consent
+                      for the revised six-suggestion rounds. Your saved responses will be retained.
                     </p>
                   </>
                 ) : current ? (
@@ -693,10 +766,10 @@ export function Discovery() {
                     </h2>
                     <EyeInstruction eye="closed" delayed />
                     <p>
-                      Six suggestions: three content categories, each in direct and permissive
-                      wording, presented one at a time in random order with matching versions kept
-                      apart. You choose when each starts. After each recording, provide a usefulness
-                      response before continuing.
+                      Six suggestions: sensory qualities and emotional/motivational response, each
+                      in Direct, Imagery and Metaphorical form. Targets alternate in a randomised
+                      order. Each suggestion refers to your selected body area. You choose when each
+                      starts. After each recording, provide a usefulness response before continuing.
                     </p>
                     <label className="check optional">
                       <input
@@ -948,6 +1021,15 @@ function Listening({
         ))}
       </div>
       <h2>Listen at your own pace.</h2>
+      <p className="help">
+        Selected body area: <strong>{session.state.primaryLocation}</strong>. Feelings selected at
+        the start:{' '}
+        {session.state.associatedFeelings?.length
+          ? session.state.associatedFeelings.join(', ')
+          : 'not specified'}
+        . These selections stay fixed for this session; start a new session if you want to change
+        them.
+      </p>
       <EyeInstruction
         eye={round.eye}
         delayed={

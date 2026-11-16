@@ -94,8 +94,9 @@ beforeEach(() => {
   mock.generate.mockReset().mockResolvedValue({
     suggestions: TYPES.map((type, i) => ({
       type,
-      contentCategory: type.replace(/_(direct|permissive)$/, ''),
-      deliveryStyle: type.endsWith('_direct') ? 'direct' : 'permissive',
+      contentCategory: type.replace(/_(direct|imagery|metaphorical)$/, ''),
+      deliveryStyle: type.split('_').at(-1),
+      targetGoal: 'sample target goal',
       text: `Suggestion ${i} ` + 'gentle wording '.repeat(6),
     })),
     model: 'text-test',
@@ -110,7 +111,7 @@ describe('server route protocol with mocked external providers', () => {
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(200);
       const round = mock.session!.state.rounds.at(-1)!;
       expect(round.eye).toBe('closed');
-      expect(round.protocolVersion).toBe('physical-3x2-v1');
+      expect(round.protocolVersion).toBe('physical-targets-2x3-v1');
       expect(new Set(round.order)).toEqual(new Set(TYPES));
       expect((await request(`sessions/${sid}/round`, {})).status).toBe(409);
       for (let i = 0; i < TYPES.length; i++) {

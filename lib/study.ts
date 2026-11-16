@@ -1,27 +1,25 @@
 import { z } from 'zod';
+import { BODY_LOCATIONS, feelingsSchema, BodyContext } from './body-context';
 export const EXPERIENCES = ['Physical pain', 'Uncomfortable physical sensation'] as const;
-export const CONTENT_CATEGORIES = [
-  'external_attention',
-  'imagery',
-  'metaphorical_reframing',
-] as const;
+export const CONTENT_CATEGORIES = ['sensory_discriminative', 'affective_motivational'] as const;
 export type ContentCategory = (typeof CONTENT_CATEGORIES)[number];
-export type DeliveryStyle = 'direct' | 'permissive';
+export const DELIVERY_STYLES = ['direct', 'imagery', 'metaphorical'] as const;
+export type DeliveryStyle = (typeof DELIVERY_STYLES)[number];
 export const TYPES = [
-  'external_attention_direct',
-  'external_attention_permissive',
-  'imagery_direct',
-  'imagery_permissive',
-  'metaphorical_reframing_direct',
-  'metaphorical_reframing_permissive',
+  'sensory_discriminative_direct',
+  'sensory_discriminative_imagery',
+  'sensory_discriminative_metaphorical',
+  'affective_motivational_direct',
+  'affective_motivational_imagery',
+  'affective_motivational_metaphorical',
 ] as const;
-export const STUDY_PROTOCOL_VERSION = 'physical-3x2-v1';
-export const CONSENT_VERSION = 'physical-consent-1';
-export const PROMPT_VERSION = 'physical-suggestions-2';
+export const STUDY_PROTOCOL_VERSION = 'physical-targets-2x3-v1';
+export const CONSENT_VERSION = 'physical-context-consent-1';
+export const PROMPT_VERSION = 'physical-target-suggestions-1';
 export const VOICE_INSTRUCTIONS =
   'Speak in a calm, neutral, warm tone at a steady, unhurried pace. Use natural pauses. No theatrical emphasis, persuasion, whispering, or music.';
 export const USEFULNESS_QUESTION =
-  'How useful was this suggestion in helping you respond to your selected physical pain or uncomfortable physical sensation?';
+  'How useful was this suggestion in helping you respond to the pain or discomfort in your selected body area?';
 export const USEFULNESS_HELP =
   'Usefulness may involve understanding, approaching, managing or relating differently to an experience, without necessarily reducing its intensity.';
 export type Eye = 'open' | 'closed';
@@ -33,6 +31,8 @@ export const baselineSchema = z
     consent: z.literal(true),
     adult: z.literal(true),
     physicalEligibility: z.literal(true),
+    primaryLocation: z.enum(BODY_LOCATIONS),
+    associatedFeelings: feelingsSchema.default([]),
   })
   .superRefine((value, ctx) => {
     if (!value.experiences.some((e) => (value.ratings[e] ?? 0) > 0))
@@ -56,10 +56,10 @@ export const generatedSchema = z
   });
 export type Suggestion = {
   id: string;
-  type:
-    (typeof TYPES)[number] | 'metaphor' | 'permissive' | 'direct' | 'imagery' | 'attentional_shift';
-  contentCategory?: ContentCategory;
-  deliveryStyle?: DeliveryStyle;
+  type: string;
+  contentCategory?: string;
+  deliveryStyle?: string;
+  targetGoal?: string;
   text: string;
   position: number;
   audioPath?: string;
@@ -80,7 +80,9 @@ export type Suggestion = {
 };
 export type Round = {
   pairedInstructionBodies?: string[];
-  instructionPairs?: Record<ContentCategory, string[]>;
+  instructionPairs?: Record<string, string[]>;
+  targetGoals?: Record<ContentCategory, string>;
+  generationContext?: BodyContext;
   protocolVersion?: string;
   id: string;
   number: number;
@@ -96,6 +98,8 @@ export type Round = {
   suggestions: Suggestion[];
 };
 export type Study = {
+  primaryLocation?: BodyContext['primaryLocation'];
+  associatedFeelings?: string[];
   eligibility?: { physicalSymptomsConfirmed: boolean; adult: boolean; at: string; version: string };
   protocolVersion?: string;
   experiences: string[];
