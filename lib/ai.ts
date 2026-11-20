@@ -20,7 +20,8 @@ import {
 import {
   assembleSuggestions,
   RoundValidationError,
-  roundContentSchema,
+  generationContentSchema,
+  joinGeneratedSentences,
   containsTry,
   sensoryClosing,
 } from './suggestion-content';
@@ -48,7 +49,11 @@ export async function generate(experiences: string[], context: BodyContext) {
   const system = prompt(experiences, context);
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: 'system', content: system },
-    { role: 'user', content: 'Prepare one round.' },
+    {
+      role: 'user',
+      content:
+        'Prepare one round. Return each delivery form as an array of sentences: exactly three for sensory bodies and four for affective texts. Each array item must be a single sentence of 18–20 whitespace-separated words, ending with a full stop and containing no other full stops, question marks or exclamation marks. Do not include the server closing in sensory arrays. Avoid abbreviations and hyphenated words. This sentence allocation meets the final 65–85 word policy; keep all target and safety requirements.',
+    },
   ];
   let assembled: ReturnType<typeof assembleSuggestions> | undefined;
   let response: OpenAI.Chat.Completions.ChatCompletion | undefined;
@@ -58,7 +63,7 @@ export async function generate(experiences: string[], context: BodyContext) {
         model,
         store: false,
         messages,
-        response_format: zodResponseFormat(roundContentSchema, 'suggestion_round'),
+        response_format: zodResponseFormat(generationContentSchema, 'suggestion_round'),
         max_completion_tokens: 5000,
       },
       { timeout: 45_000, maxRetries: 0 },
@@ -69,9 +74,9 @@ export async function generate(experiences: string[], context: BodyContext) {
     let reason = 'Return complete JSON containing both targets and all three delivery forms.';
     if (message?.content && response.choices[0]?.finish_reason === 'stop') {
       try {
-        const parsed = roundContentSchema.safeParse(JSON.parse(message.content));
+        const parsed = generationContentSchema.safeParse(JSON.parse(message.content));
         if (parsed.success) {
-          assembled = assembleSuggestions(parsed.data, context);
+          assembled = assembleSuggestions(joinGeneratedSentences(parsed.data), context);
           break;
         }
       } catch (error) {
@@ -125,7 +130,7 @@ export async function generate(experiences: string[], context: BodyContext) {
     responseId: response.id,
     prompt: system,
     generationMessages: messages,
-    generationRepairVersion: 'field-count-feedback-1',
+    generationRepairVersion: 'sentence-array-2',
   };
 }
 export async function speech(text: string) {

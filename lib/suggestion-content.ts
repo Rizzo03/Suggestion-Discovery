@@ -17,6 +17,32 @@ export class RoundValidationError extends Error {
     super('Final suggestions must have four sentences and 65 to 85 words');
   }
 }
+// Constrain the provider output itself: each sentence has 18–20 whitespace
+// words and one terminal stop. The existing final-text validation still applies.
+const sentence = z.string().regex(/^(?:[^\s.!?]+\s+){17,19}[^\s.!?]+[.!?]$/u);
+const sentenceTarget = (count: number) =>
+  z.object({
+    goal: z.string().min(10).max(400),
+    direct: z.array(sentence).length(count),
+    imagery: z.array(sentence).length(count),
+    metaphorical: z.array(sentence).length(count),
+  });
+export const generationContentSchema = z.object({
+  sensory_discriminative: sentenceTarget(3),
+  affective_motivational: sentenceTarget(4),
+});
+export function joinGeneratedSentences(input: z.infer<typeof generationContentSchema>) {
+  const joinTarget = (target: typeof input.sensory_discriminative) => ({
+    goal: target.goal,
+    direct: target.direct.join(' '),
+    imagery: target.imagery.join(' '),
+    metaphorical: target.metaphorical.join(' '),
+  });
+  return {
+    sensory_discriminative: joinTarget(input.sensory_discriminative),
+    affective_motivational: joinTarget(input.affective_motivational),
+  };
+}
 export function containsTry(text: string) {
   return /\b(?:try|tries|tried|trying)\b/i.test(text.normalize('NFKC'));
 }
