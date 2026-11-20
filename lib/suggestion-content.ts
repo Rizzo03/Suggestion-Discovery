@@ -12,6 +12,11 @@ export const roundContentSchema = z.object({
   sensory_discriminative: targetSchema,
   affective_motivational: targetSchema,
 });
+export class RoundValidationError extends Error {
+  constructor(public readonly corrections: string[]) {
+    super('Final suggestions must have four sentences and 65 to 85 words');
+  }
+}
 export function containsTry(text: string) {
   return /\b(?:try|tries|tried|trying)\b/i.test(text.normalize('NFKC'));
 }
@@ -82,8 +87,14 @@ export function assembleSuggestions(
     if (suggestion.deliveryStyle === 'imagery' && !text.startsWith(`imagine your ${location}`))
       throw new Error('Imagery suggestions must begin with Imagine and the selected body area');
   }
-  if (suggestions.some((x) => !meetsTextPolicy(x.text)))
-    throw new Error('Final suggestions must have four sentences and 65 to 85 words');
+  const corrections = suggestions
+    .filter((x) => !meetsTextPolicy(x.text))
+    .map((x) => {
+      const stats = textStatistics(x.text);
+      const closingWords = x.closingSentence ? textStatistics(x.closingSentence).wordCount : 0;
+      return `${x.type}: final text has ${stats.sentenceCount} sentences and ${stats.wordCount} words. Supply exactly ${x.closingSentence ? 3 : 4} body sentences with ${65 - closingWords}–${85 - closingWords} words${x.closingSentence ? '; the server adds the supplied closing, so do not include it' : ''}.`;
+    });
+  if (corrections.length) throw new RoundValidationError(corrections);
   return {
     suggestions: suggestions.map((x, i) => ({
       ...x,

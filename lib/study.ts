@@ -130,6 +130,8 @@ export type Round = {
   model: string;
   promptVersion: string;
   prompt: string;
+  generationMessages?: unknown[];
+  generationRepairVersion?: string;
   responseId: string;
   createdAt: string;
   completedAt?: string;

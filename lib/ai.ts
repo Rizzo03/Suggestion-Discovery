@@ -19,6 +19,7 @@ import {
 } from './body-context';
 import {
   assembleSuggestions,
+  RoundValidationError,
   roundContentSchema,
   containsTry,
   sensoryClosing,
@@ -87,14 +88,20 @@ export async function generate(experiences: string[], context: BodyContext) {
             'Imagery must describe the literal target experience without comparisons',
           ].includes(error.message)
         )
-          reason = error.message;
+          reason =
+            error instanceof RoundValidationError ? error.corrections.join(' ') : error.message;
       }
     }
+    console.warn('round_validation_failed', {
+      attempt: attempt + 1,
+      responseId: response.id,
+      reason,
+    });
     if (attempt === 0) {
       if (message?.content) messages.push({ role: 'assistant', content: message.content });
       messages.push({
         role: 'user',
-        content: `The round failed validation: ${reason} Final texts require exactly four sentences and 65–85 words. Sensory bodies have three sentences plus the server closing; affective texts have four sentences. Regenerate the complete round. Every direct text must start exactly "Your ${spokenLocation(context.primaryLocation)}"; every imagery text must start exactly "Imagine your ${spokenLocation(context.primaryLocation)}". All six texts must name that body area, differ, and avoid try/tries/tried/trying. Imagery must ask the person to imagine the literal target experience without metaphor, simile or symbolic substitution. Sensory texts are bodies that lead towards the server-appended softer, less intense sensory ending. Preserve all safety requirements.`,
+        content: `The round failed validation: ${reason} Final texts require exactly four sentences and 65–85 words. Sensory bodies have three sentences plus the server closing; affective texts have four sentences. Return the complete JSON round, correcting the identified failures and preserving compliant texts verbatim. Count the words and sentences in each corrected field before returning it. Every direct text must start exactly "Your ${spokenLocation(context.primaryLocation)}"; every imagery text must start exactly "Imagine your ${spokenLocation(context.primaryLocation)}". All six texts must name that body area, differ, and avoid try/tries/tried/trying. Imagery must ask the person to imagine the literal target experience without metaphor, simile or symbolic substitution. Sensory texts are bodies that lead towards the server-appended softer, less intense sensory ending. Preserve all safety requirements.`,
       });
     }
   }
@@ -117,6 +124,8 @@ export async function generate(experiences: string[], context: BodyContext) {
     model: response.model,
     responseId: response.id,
     prompt: system,
+    generationMessages: messages,
+    generationRepairVersion: 'field-count-feedback-1',
   };
 }
 export async function speech(text: string) {

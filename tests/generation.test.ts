@@ -52,3 +52,24 @@ it('does not retry refusals or bypass flagged moderation', async () => {
   await expect(generate(['Physical pain'], sampleContext)).rejects.toThrow('A suitable round');
   expect(mocks.create).toHaveBeenCalledTimes(1);
 });
+
+it('reports exact failed-field counts and closing-adjusted word budgets to the retry', async () => {
+  const invalid = contentFixture();
+  invalid.sensory_discriminative.direct =
+    'Your lower back can feel different. Notice its boundaries gently. Stop whenever you wish.';
+  mocks.create
+    .mockResolvedValueOnce(response(invalid))
+    .mockResolvedValueOnce(response(contentFixture()));
+  const result = await generate(['Physical pain'], sampleContext);
+  const correction = mocks.create.mock.calls[1][0].messages.at(-1).content;
+  expect(correction).toContain('sensory_discriminative_direct: final text has 4 sentences');
+  expect(correction).toContain('exactly 3 body sentences');
+  expect(correction).toContain('preserving compliant texts verbatim');
+  expect(result.generationMessages.at(-1)?.content).toBe(correction);
+  expect(result.generationRepairVersion).toBe('field-count-feedback-1');
+  expect(
+    result.suggestions.every(
+      (x) => x.wordCount >= 65 && x.wordCount <= 85 && x.sentenceCount === 4,
+    ),
+  ).toBe(true);
+});

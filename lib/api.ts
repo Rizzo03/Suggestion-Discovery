@@ -258,6 +258,8 @@ export async function handle(req: Request, path: string[]) {
           targetGoals: ai.targetGoals,
           generationContext: context,
           prompt: ai.prompt,
+          generationMessages: ai.generationMessages,
+          generationRepairVersion: ai.generationRepairVersion,
           responseId: ai.responseId,
           createdAt: at,
           suggestions: order.map((type, i) => ({
